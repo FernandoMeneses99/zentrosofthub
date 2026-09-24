@@ -3,6 +3,7 @@ import NewCompanyForm from "./NewCompanyForm";
 import NewContactForm from "./NewContactForm";
 import { CompaniesTable, ContactsTable } from "./tables";
 import { ExportCsv } from "@/components/ui/export-csv";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function CrmPage() {
   const supabase = await createServerSupabase();
@@ -18,11 +19,16 @@ export default async function CrmPage() {
   ]);
   return (
     <main className="space-y-6 p-8">
-      <h1 className="text-2xl font-extrabold text-[#0a1628]">CRM — {companies?.length ?? 0} empresas, {contacts?.length ?? 0} contactos</h1>
-      <div className="flex gap-2">
-        <ExportCsv rows={(companies ?? []) as Record<string, unknown>[]} filename="empresas.csv" label="Empresas CSV" />
-        <ExportCsv rows={(contacts ?? []) as Record<string, unknown>[]} filename="contactos.csv" label="Contactos CSV" />
-      </div>
+      <PageHeader
+        title="CRM"
+        subtitle={`${companies?.length ?? 0} empresas · ${contacts?.length ?? 0} contactos`}
+        action={
+          <div className="flex gap-2">
+            <ExportCsv rows={(companies ?? []) as Record<string, unknown>[]} filename="empresas.csv" label="Empresas CSV" />
+            <ExportCsv rows={(contacts ?? []) as Record<string, unknown>[]} filename="contactos.csv" label="Contactos CSV" />
+          </div>
+        }
+      />
       <section className="space-y-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-[#64748b]">Empresas</h2>
         <CompaniesTable rows={companies ?? []} />

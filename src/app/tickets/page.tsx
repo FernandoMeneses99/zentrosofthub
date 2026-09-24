@@ -1,6 +1,9 @@
 import { createServerSupabase } from "@/lib/supabase-server";
 import { Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { HoursBars, BillablePie } from "@/components/charts";
 import { InboxEmpty } from "@/components/illustrations";
 import NewTicketForm from "./NewTicketForm";
 import Link from "next/link";
@@ -22,15 +25,18 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
 
   const filtro = (await searchParams).estado ?? "todos";
   let tickets: { id: string; titulo: string; estado: string; prioridad: string; created_at: string; sla_vence: string | null }[] | null = null;
+  let stats: { estado: string; prioridad: string; sla_vence: string | null }[] | null = null;
   let ticketsMissing = false;
   try {
     let q = supabase.from("tickets").select("id,titulo,estado,prioridad,created_at,sla_vence").eq("organization_id", orgId).order("created_at", { ascending: false }).limit(50);
     if (filtro !== "todos") q = q.eq("estado", filtro);
-    const { data, error } = await q;
-    if (error) {
-      if (/does not exist|could not find/i.test(error.message)) ticketsMissing = true;
-      else throw new Error(error.message);
-    } else tickets = data;
+    const res = await q;
+    const resStats = await supabase.from("tickets").select("estado,prioridad,sla_vence").eq("organization_id", orgId).limit(500);
+    if (res.error) {
+      if (/does not exist|could not find/i.test(res.error.message)) ticketsMissing = true;
+      else throw new Error(res.error.message);
+    } else tickets = res.data;
+    stats = resStats.data;
   } catch (e) {
     return (
       <main className="space-y-4 p-8">
@@ -52,6 +58,16 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
     );
 
   const estados = ["todos", "abierto", "en_proceso", "pendiente", "cerrado"];
+  const now = new Date();
+  const byEstado = ["abierto", "en_proceso", "pendiente", "cerrado"].map((s) => ({
+    name: s.replace("_", " "), value: (stats ?? []).filter((t) => t.estado === s).length,
+  }));
+  const byPrio = ["urgente", "alta", "media", "baja"].map((p) => ({
+    name: p, horas: (stats ?? []).filter((t) => t.prioridad === p).length,
+  }));
+  const abiertos = (stats ?? []).filter((t) => t.estado !== "cerrado");
+  const vencidos = abiertos.filter((t) => t.sla_vence && new Date(t.sla_vence) < now).length;
+  const cumplimiento = abiertos.length > 0 ? Math.round(((abiertos.length - vencidos) / abiertos.length) * 100) : 100;
 
   return (
     <main className="flex min-h-[calc(100vh-57px)]">
@@ -78,8 +94,20 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       </nav>
 
       <div className="flex-1 space-y-4 p-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-[#0a1628]">Tickets {filtro !== "todos" && <Badge tone="info">{filtro}</Badge>}</h1>
+        <PageHeader
+          title="Tickets"
+          subtitle={`${abiertos.length} abiertos · ${vencidos} vencidos · cumplimiento SLA ${cumplimiento}%${filtro !== "todos" ? ` · filtro: ${filtro}` : ""}`}
+        />
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Card>
+            <CardTitle>Por estado</CardTitle>
+            <BillablePie data={byEstado.filter((d) => d.value > 0).map((d) => ({ name: d.name, value: d.value }))} />
+          </Card>
+          <Card className="lg:col-span-2">
+            <CardTitle>Por prioridad</CardTitle>
+            <HoursBars data={byPrio} />
+          </Card>
         </div>
 
         {(!tickets || tickets.length === 0) ? (

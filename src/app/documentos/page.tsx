@@ -20,7 +20,7 @@ export default async function DocumentosPage() {
   return (
     <main className="space-y-6 p-8">
       <h1 className="text-2xl font-extrabold text-[#0a1628]">Documentos — {docs?.length ?? 0}</h1>
-      <DocumentsTable rows={docs ?? []} />
+      <DocumentsTable rows={docs ?? []} orgId={orgId} />
       <UploadForm orgId={orgId} />
     </main>
   );
