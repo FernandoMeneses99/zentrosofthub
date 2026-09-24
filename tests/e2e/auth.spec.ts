@@ -5,7 +5,7 @@ test("login renderiza formulario", async ({ page }) => {
   await expect(page.getByText("Ingresar al Hub")).toBeVisible();
 });
 
-for (const route of ["/dashboard", "/crm", "/horas", "/tickets", "/proyectos", "/usuarios", "/auditoria", "/perfil"]) {
+for (const route of ["/dashboard", "/crm", "/horas", "/tickets", "/proyectos", "/usuarios", "/auditoria", "/perfil", "/documentos", "/notificaciones"]) {
   test(`${route} sin sesión redirige a /login`, async ({ page }) => {
     await page.goto(route);
     await expect(page).toHaveURL(/\/login/);
