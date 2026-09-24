@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase-server";
 import { Card, CardTitle, Badge } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import EditCompanyForm from "./EditCompanyForm";
 import Link from "next/link";
 
 export default async function CompanyDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -37,6 +38,7 @@ export default async function CompanyDetail({ params }: { params: Promise<{ id: 
     <main className="space-y-6 p-8">
       <Link href="/crm" className="text-sm">← CRM</Link>
       <PageHeader title={c.razon_social} subtitle={`${c.estado} · ${totalH}h registradas · NIT ${c.nit ?? "—"}`} />
+      <EditCompanyForm company={c} />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardTitle>Datos de la empresa</CardTitle>
