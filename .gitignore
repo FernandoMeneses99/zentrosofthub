@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env*
+test-results/
+playwright-report/
+*.log
+tsconfig.tsbuildinfo
+dev-out.log
+dev-err.log

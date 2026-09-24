@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #4b82c3;
+  --color-primary-dark: #3a6aa3;
+  --color-accent: #4fd290;
+  --color-ink: #0a1628;
+  --color-ink-surface: #132238;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+/* Zentrosoft Hub — base premium sobre Tailwind + tokens de marca. */
+body { background: #f8fafc; color: #1e293b; }
+
+a { color: var(--color-primary); }
+a:hover { color: var(--color-primary-dark); }
