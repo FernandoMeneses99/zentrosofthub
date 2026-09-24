@@ -1,4 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase-server";
+import { canWrite } from "@/lib/access";
 import { Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
@@ -19,9 +20,10 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return <main className="p-8"><a href="/login">Inicia sesión</a></main>;
-  const { data: memberships } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id);
+  const { data: memberships } = await supabase.from("organization_members").select("org_id,tenant_role").eq("user_id", user.id);
   const orgId = memberships?.[0]?.org_id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
+  const write = canWrite(memberships?.[0]?.tenant_role);
 
   const filtro = (await searchParams).estado ?? "todos";
   let tickets: { id: string; titulo: string; estado: string; prioridad: string; created_at: string; sla_vence: string | null }[] | null = null;
@@ -139,7 +141,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
           </div>
         )}
 
-        <NewTicketForm orgId={orgId} companies={companies ?? []} />
+        {write && <NewTicketForm orgId={orgId} companies={companies ?? []} />}
         <Link href="/dashboard"><Button variant="ghost">← Dashboard</Button></Link>
       </div>
     </main>

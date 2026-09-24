@@ -1,4 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase-server";
+import { canWrite } from "@/lib/access";
 import { Card, CardTitle, Badge } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import EditCompanyForm from "./EditCompanyForm";
@@ -9,9 +10,10 @@ export default async function CompanyDetail({ params }: { params: Promise<{ id: 
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return <main className="p-8"><a href="/login">Inicia sesión</a></main>;
-  const { data: memberships } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id);
+  const { data: memberships } = await supabase.from("organization_members").select("org_id,tenant_role").eq("user_id", user.id);
   const orgId = memberships?.[0]?.org_id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
+  const write = canWrite(memberships?.[0]?.tenant_role);
 
   const { data: c, error } = await supabase.from("companies").select("*")
     .eq("id", id).eq("organization_id", orgId).is("deleted_at", null).single();
@@ -38,7 +40,7 @@ export default async function CompanyDetail({ params }: { params: Promise<{ id: 
     <main className="space-y-6 p-8">
       <Link href="/crm" className="text-sm">← CRM</Link>
       <PageHeader title={c.razon_social} subtitle={`${c.estado} · ${totalH}h registradas · NIT ${c.nit ?? "—"}`} />
-      <EditCompanyForm company={c} />
+      {write && <EditCompanyForm company={c} />}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardTitle>Datos de la empresa</CardTitle>

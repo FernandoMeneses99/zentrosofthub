@@ -1,4 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase-server";
+import { canWrite } from "@/lib/access";
 import { Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -11,9 +12,10 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return <main className="p-8"><a href="/login">Inicia sesión</a></main>;
-  const { data: memberships } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id);
+  const { data: memberships } = await supabase.from("organization_members").select("org_id,tenant_role").eq("user_id", user.id);
   const orgId = memberships?.[0]?.org_id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
+  const write = canWrite(memberships?.[0]?.tenant_role);
 
   const { data: ticket, error } = await supabase.from("tickets")
     .select("id,titulo,descripcion,estado,prioridad,sla_vence,created_at,company_id,asignado_a")
@@ -60,7 +62,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
             ))}
             {(comments ?? []).length === 0 && <p className="text-sm text-[#64748b]">Sin mensajes todavía.</p>}
           </ol>
-          <TicketComposer ticketId={id} orgId={orgId} />
+          {write && <TicketComposer ticketId={id} orgId={orgId} />}
           {(similares ?? []).length > 0 && (
             <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-sm">
               <p className="font-semibold text-amber-800">Posibles duplicados</p>
@@ -74,7 +76,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
         </div>
 
         <aside className="hidden w-64 shrink-0 space-y-4 rounded-[18px] border border-[#e6ebf2] bg-white p-4 lg:block">
-          <TicketStatusForm ticketId={id} estado={ticket.estado} prioridad={ticket.prioridad} asignado={ticket.asignado_a} members={(members ?? []).map((m) => m.user_id)} />
+          {write && <TicketStatusForm ticketId={id} estado={ticket.estado} prioridad={ticket.prioridad} asignado={ticket.asignado_a} members={(members ?? []).map((m) => m.user_id)} />}
         </aside>
       </div>
     </main>

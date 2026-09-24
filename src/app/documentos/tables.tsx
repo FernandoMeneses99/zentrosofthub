@@ -26,7 +26,7 @@ function DownloadButton({ path }: { path: string }) {
   );
 }
 
-export function DocumentsTable({ rows, orgId }: { rows: Doc[]; orgId: string }) {
+export function DocumentsTable({ rows, orgId, write }: { rows: Doc[]; orgId: string; write: boolean }) {
   const cols: ColumnDef<Doc>[] = [
     { accessorKey: "nombre", header: "Nombre" },
     { accessorKey: "categoria", header: "Categoría", cell: ({ row }) => <Badge tone="info">{row.original.categoria}</Badge> },
@@ -34,7 +34,7 @@ export function DocumentsTable({ rows, orgId }: { rows: Doc[]; orgId: string }) 
     { id: "acciones", header: "Acciones", cell: ({ row }) => (
       <span className="flex gap-2">
         <DownloadButton path={row.original.storage_path} />
-        <SendToSign orgId={orgId} documentId={row.original.id} />
+        {write && <SendToSign orgId={orgId} documentId={row.original.id} />}
       </span>
     ) },
   ];

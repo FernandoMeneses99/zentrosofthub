@@ -1,10 +1,15 @@
 import { createServerSupabase } from "@/lib/supabase-server";
+import { canAudit } from "@/lib/access";
 import { PageHeader } from "@/components/ui/page-header";
 
 export default async function AuditoriaPage() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return <main style={{ padding: 32 }}><a href="/login">Inicia sesión</a></main>;
+  const { data: memberships } = await supabase.from("organization_members").select("tenant_role").eq("user_id", user.id);
+  if (!canAudit(memberships?.[0]?.tenant_role)) {
+    return <main className="space-y-4 p-8"><h1 className="text-2xl font-extrabold">Auditoría</h1><p>Requiere permiso audit.read (owner/admin).</p></main>;
+  }
   const { data: logs, error } = await supabase.from("audit_logs").select("id,accion,recurso,recurso_id,resultado,at,actor,diff,hash").order("at", { ascending: false }).limit(100);
   return (
     <main className="space-y-4 p-8">

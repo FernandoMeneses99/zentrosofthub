@@ -9,19 +9,21 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-client";
 
 const links = [
-  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
-  { href: "/crm", label: "CRM", Icon: Building2 },
-  { href: "/horas", label: "Horas", Icon: Clock },
-  { href: "/tickets", label: "Tickets", Icon: Inbox },
-  { href: "/proyectos", label: "Proyectos", Icon: FolderKanban },
-  { href: "/documentos", label: "Documentos", Icon: Files },
-  { href: "/usuarios", label: "Usuarios", Icon: Users },
-  { href: "/auditoria", label: "Auditoría", Icon: ShieldCheck },
-  { href: "/notificaciones", label: "Avisos", Icon: Bell },
-  { href: "/perfil", label: "Perfil", Icon: User },
+  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard, roles: null },
+  { href: "/crm", label: "CRM", Icon: Building2, roles: null },
+  { href: "/horas", label: "Horas", Icon: Clock, roles: null },
+  { href: "/tickets", label: "Tickets", Icon: Inbox, roles: ["owner", "admin", "manager", "employee"] },
+  { href: "/proyectos", label: "Proyectos", Icon: FolderKanban, roles: ["owner", "admin", "manager", "employee"] },
+  { href: "/documentos", label: "Documentos", Icon: Files, roles: ["owner", "admin", "manager", "employee"] },
+  { href: "/usuarios", label: "Usuarios", Icon: Users, roles: ["owner", "admin"] },
+  { href: "/auditoria", label: "Auditoría", Icon: ShieldCheck, roles: ["owner", "admin"] },
+  { href: "/notificaciones", label: "Avisos", Icon: Bell, roles: ["owner", "admin", "manager", "employee"] },
+  { href: "/perfil", label: "Perfil", Icon: User, roles: null },
 ];
 
-export default function AppShell({ children, email }: { children: React.ReactNode; email: string | null }) {
+export default function AppShell({ children, email, role }: {
+  children: React.ReactNode; email: string | null; role: string | null;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [count, setCount] = useState<number | null>(null);
@@ -48,7 +50,9 @@ export default function AppShell({ children, email }: { children: React.ReactNod
           </span>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto px-3" aria-label="Principal">
-          {links.map(({ href, label, Icon }) => {
+          {links
+            .filter((l) => !l.roles || (role && l.roles.includes(role)))
+            .map(({ href, label, Icon }) => {
             const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
             return (
               <Link
