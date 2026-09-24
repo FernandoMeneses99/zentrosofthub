@@ -2,7 +2,8 @@ import { test, expect } from "@playwright/test";
 
 test("login renderiza formulario", async ({ page }) => {
   await page.goto("/login");
-  await expect(page.getByText("Ingresar al Hub")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ingresar" })).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeVisible();
 });
 
 for (const route of ["/dashboard", "/crm", "/horas", "/tickets", "/proyectos", "/usuarios", "/auditoria", "/perfil", "/documentos", "/notificaciones"]) {

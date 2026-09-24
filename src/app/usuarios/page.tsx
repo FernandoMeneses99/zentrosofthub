@@ -31,10 +31,10 @@ export default async function UsuariosPage() {
     <main className="space-y-6 p-8">
       <PageHeader title="Usuarios" subtitle={`${rows.length} miembros del tenant · solo owner/admin`} />
       <MembersTable rows={rows} orgId={orgId} selfId={user.id} />
-      <AddMemberForm orgId={orgId} />
+      <AddMemberForm />
       <p className="text-xs text-[#64748b]">
-        Flujo de alta: el técnico ingresa una vez por /login (crea su usuario Auth), copias su UUID de
-        Supabase → Authentication → Users y lo agregas aquí con su rol.
+        Usuarios existentes (creados antes): asígnales contraseña con el SQL de reseteo en docs/RUNBOOK.md,
+        o elimínalos de Auth y créalos aquí de nuevo.
       </p>
     </main>
   );
