@@ -10,6 +10,8 @@ export default function PerfilClient({ email, org, role, status, initial }: {
   email: string; org: string; role: string; status: string; initial: string;
 }) {
   const [msg, setMsg] = useState("");
+  const [pwd, setPwd] = useState("");
+  const [pwdMsg, setPwdMsg] = useState("");
   const exportar = async () => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -57,6 +59,26 @@ export default function PerfilClient({ email, org, role, status, initial }: {
             <Button variant="danger" onClick={solicitarBorrado}>Solicitar eliminación</Button>
           </div>
           {msg && <p className="mt-2 text-sm">{msg}</p>}
+        </Card>
+        <Card>
+          <CardTitle><ShieldCheck size={13} className="mr-1 inline" />Cambiar contraseña</CardTitle>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <input
+              type="password" autoComplete="new-password" aria-label="Nueva contraseña"
+              className="rounded-[10px] border border-[#e6ebf2] px-3 py-2"
+              placeholder="Nueva (8+ caracteres)" value={pwd} onChange={(e) => setPwd(e.target.value)}
+            />
+            <Button
+              onClick={async () => {
+                if (pwd.length < 8) { setPwdMsg("Error: mínimo 8 caracteres."); return; }
+                const supabase = createClient();
+                const { error } = await supabase.auth.updateUser({ password: pwd });
+                setPwdMsg(error ? "Error: " + error.message : "Contraseña actualizada.");
+                if (!error) setPwd("");
+              }}
+            >Guardar</Button>
+          </div>
+          {pwdMsg && <p className="mt-2 text-sm">{pwdMsg}</p>}
         </Card>
       </div>
     </main>
