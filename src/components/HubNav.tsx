@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Building2, Clock, ShieldCheck, User, Inbox, FolderKanban, Users } from "lucide-react";
+import { LayoutDashboard, Building2, Clock, ShieldCheck, User, Inbox, FolderKanban, Users, Files } from "lucide-react";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
@@ -7,6 +7,7 @@ const links = [
   { href: "/horas", label: "Horas", Icon: Clock },
   { href: "/tickets", label: "Tickets", Icon: Inbox },
   { href: "/proyectos", label: "Proyectos", Icon: FolderKanban },
+  { href: "/documentos", label: "Documentos", Icon: Files },
   { href: "/usuarios", label: "Usuarios", Icon: Users },
   { href: "/auditoria", label: "Auditoría", Icon: ShieldCheck },
   { href: "/perfil", label: "Perfil", Icon: User },
