@@ -2,6 +2,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/card";
+import Link from "next/link";
 import CompanyActions from "./CompanyActions";
 import ContactEraseButton from "./ContactEraseButton";
 
@@ -9,7 +10,7 @@ type Company = { id: string; razon_social: string; nit: string | null; estado: s
 type Contact = { id: string; nombre: string; apellido: string | null; email: string | null; rol_cliente: string };
 
 const companyCols: ColumnDef<Company>[] = [
-  { accessorKey: "razon_social", header: "Razón social" },
+  { accessorKey: "razon_social", header: "Razón social", cell: ({ row }) => <Link href={`/crm/${row.original.id}`}>{row.original.razon_social}</Link> },
   { accessorKey: "nit", header: "NIT", cell: ({ row }) => row.original.nit ?? "—" },
   { accessorKey: "email", header: "Email", cell: ({ row }) => row.original.email ?? "—" },
   { accessorKey: "ciudad", header: "Ciudad", cell: ({ row }) => row.original.ciudad ?? "—" },
