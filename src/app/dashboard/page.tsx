@@ -11,12 +11,13 @@ export default async function Dashboard() {
   const orgId = orgs?.[0]?.id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
 
-  const [{ count: nCompanies }, { count: nContacts }, { data: entries }, { data: companies }, { count: nVencidos }] = await Promise.all([
+  const [{ count: nCompanies }, { count: nContacts }, { data: entries }, { data: companies }, { count: nVencidos }, { data: actividad }] = await Promise.all([
     supabase.from("companies").select("id", { count: "exact", head: true }).eq("organization_id", orgId).is("deleted_at", null),
     supabase.from("contacts").select("id", { count: "exact", head: true }).eq("organization_id", orgId).is("deleted_at", null),
     supabase.from("time_entries").select("fecha,duration_min,billable,estado,company_id").eq("organization_id", orgId).order("fecha", { ascending: true }).limit(200),
     supabase.from("companies").select("id,razon_social").eq("organization_id", orgId).is("deleted_at", null),
     supabase.from("tickets").select("id", { count: "exact", head: true }).eq("organization_id", orgId).in("estado", ["abierto", "en_proceso", "pendiente"]).lt("sla_vence", new Date().toISOString()),
+    supabase.from("audit_logs").select("accion,recurso,at").eq("organization_id", orgId).order("at", { ascending: false }).limit(5),
   ]);
 
   const totalMin = entries?.reduce((a, e) => a + (e.duration_min ?? 0), 0) ?? 0;
@@ -99,6 +100,16 @@ export default async function Dashboard() {
       <Card>
         <CardTitle>Horas por cliente</CardTitle>
         <HoursBars data={perClient} />
+      </Card>
+
+      <Card>
+        <CardTitle>Actividad reciente</CardTitle>
+        <ul className="mt-2 space-y-1 text-sm">
+          {(actividad ?? []).map((a, i) => (
+            <li key={i} className="text-[#64748b]">{a.at.slice(0, 16).replace("T", " ")} — <strong className="text-[#0a1628]">{a.accion}</strong> {a.recurso}</li>
+          ))}
+          {(actividad ?? []).length === 0 && <li className="text-[#64748b]">Sin actividad registrada.</li>}
+        </ul>
       </Card>
     </main>
   );

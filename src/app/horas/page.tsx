@@ -2,6 +2,7 @@ import { createServerSupabase } from "@/lib/supabase-server";
 import NewTimeEntryForm from "./NewTimeEntryForm";
 import { HoursTable } from "./tables";
 import Timer from "./Timer";
+import { ExportCsv } from "@/components/ui/export-csv";
 
 export default async function HorasPage() {
   const supabase = await createServerSupabase();
@@ -23,6 +24,7 @@ export default async function HorasPage() {
     <main className="space-y-6 p-8">
       <h1 className="text-2xl font-extrabold text-[#0a1628]">Horas — {(totalMin / 60).toFixed(1)}h totales · {(factMin / 60).toFixed(1)}h facturables · {(aprobMin / 60).toFixed(1)}h aprobadas</h1>
       <Timer orgId={orgId} />
+      <div><ExportCsv rows={(entries ?? []) as Record<string, unknown>[]} filename="horas.csv" label="Exportar CSV" /></div>
       <HoursTable rows={entries ?? []} />
       <NewTimeEntryForm orgId={orgId} companies={companies ?? []} projects={projects ?? []} tickets={tickets ?? []} />
     </main>
