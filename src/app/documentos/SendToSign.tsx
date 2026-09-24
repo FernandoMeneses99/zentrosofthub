@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase-client";
 import { Button } from "@/components/ui/button";
+import { PenLine } from "lucide-react";
 
 // Crea la solicitud de firma en estado borrador.
 // Cuando se conecte Documenso, este mismo registro recibe el external_id
@@ -24,7 +25,7 @@ export default function SendToSign({ orgId, documentId }: { orgId: string; docum
           });
           setMsg(error ? "Error: " + error.message : "Enviado a firma (borrador). Recarga.");
         }}
-      >✍ Enviar a firma</Button>
+      ><PenLine size={15} /> Enviar a firma</Button>
       {msg && <small> {msg}</small>}
     </span>
   );

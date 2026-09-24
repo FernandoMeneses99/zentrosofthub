@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Play, Pause } from "lucide-react";
 
 export default function Timer({ orgId }: { orgId: string }) {
   const [running, setRunning] = useState<{ id: string; started: number } | null>(null);
@@ -47,8 +48,8 @@ export default function Timer({ orgId }: { orgId: string }) {
     <Card className="flex items-center gap-4">
       <span className="text-3xl font-extrabold tabular-nums text-[#0a1628]">{mm}:{ss}</span>
       {!running
-        ? <Button onClick={start}>▶ Iniciar</Button>
-        : <Button onClick={stop} variant="secondary">⏸ Detener y guardar</Button>}
+        ? <Button onClick={start}><Play size={15} /> Iniciar</Button>
+        : <Button onClick={stop} variant="secondary"><Pause size={15} /> Detener y guardar</Button>}
       {msg && <p className="text-sm">{msg}</p>}
     </Card>
   );

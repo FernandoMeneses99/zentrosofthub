@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase-server";
 import AddMemberForm from "./AddMemberForm";
 import { MembersTable, type Member } from "./tables";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function UsuariosPage() {
   const supabase = await createServerSupabase();
@@ -28,7 +29,7 @@ export default async function UsuariosPage() {
 
   return (
     <main className="space-y-6 p-8">
-      <h1 className="text-2xl font-extrabold text-[#0a1628]">Usuarios — {rows.length} miembros</h1>
+      <PageHeader title="Usuarios" subtitle={`${rows.length} miembros del tenant · solo owner/admin`} />
       <MembersTable rows={rows} orgId={orgId} selfId={user.id} />
       <AddMemberForm orgId={orgId} />
       <p className="text-xs text-[#64748b]">

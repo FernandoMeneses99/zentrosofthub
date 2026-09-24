@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "./button";
+import { Download } from "lucide-react";
 
 function toCsv(rows: Record<string, unknown>[]): string {
   if (rows.length === 0) return "";
@@ -20,7 +21,7 @@ export function ExportCsv({ rows, filename, label }: { rows: Record<string, unkn
         a.click();
       }}
     >
-      ⬇ {label}
+      <Download size={15} /> {label}
     </Button>
   );
 }

@@ -1,7 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase-server";
 import { Card, CardTitle, Badge } from "@/components/ui/card";
 import { HoursLine, HoursBars, BillablePie } from "@/components/charts";
-import { Building2, Users, Clock, CircleCheck } from "lucide-react";
+import { Building2, Users, Clock, CircleCheck, TriangleAlert } from "lucide-react";
 
 export default async function Dashboard() {
   const supabase = await createServerSupabase();
@@ -49,8 +49,8 @@ export default async function Dashboard() {
   return (
     <main className="space-y-6 p-8">
       {(nVencidos ?? 0) > 0 && (
-        <a href="/tickets" className="block rounded-[12px] border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
-          ⚠ {nVencidos} ticket(s) con SLA vencido — ver en Tickets
+        <a href="/tickets" className="flex items-center gap-2 rounded-[12px] border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+          <TriangleAlert size={15} /> {nVencidos} ticket(s) con SLA vencido — ver en Tickets
         </a>
       )}
       <div className="flex items-center justify-between">

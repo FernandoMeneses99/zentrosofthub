@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase-server";
 import { DocumentsTable } from "./tables";
 import UploadForm from "./UploadForm";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function DocumentosPage() {
   const supabase = await createServerSupabase();
@@ -19,7 +20,7 @@ export default async function DocumentosPage() {
 
   return (
     <main className="space-y-6 p-8">
-      <h1 className="text-2xl font-extrabold text-[#0a1628]">Documentos — {docs?.length ?? 0}</h1>
+      <PageHeader title="Documentos" subtitle={`${docs?.length ?? 0} archivos · bucket privado con URLs firmadas de 60s`} />
       <DocumentsTable rows={docs ?? []} orgId={orgId} />
       <UploadForm orgId={orgId} />
     </main>

@@ -29,6 +29,7 @@ export default function NewCompanyForm({ orgId }: { orgId: string }) {
           <input
             className="w-full rounded-[10px] border border-[#e6ebf2] px-3 py-2"
             placeholder={placeholder}
+            aria-label={placeholder}
             value={field.state.value}
             onChange={(e) => field.handleChange(e.target.value)}
             onBlur={field.handleBlur}

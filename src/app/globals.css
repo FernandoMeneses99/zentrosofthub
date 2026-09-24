@@ -12,5 +12,18 @@
 /* Zentrosoft Hub — base premium sobre Tailwind + tokens de marca. */
 body { background: #f8fafc; color: #1e293b; }
 
-a { color: var(--color-primary); }
+::selection { background: #4b82c3; color: #fff; }
+
+a { color: var(--color-primary); transition: color 150ms ease; }
 a:hover { color: var(--color-primary-dark); }
+
+button, a, select, input[type="checkbox"] { cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

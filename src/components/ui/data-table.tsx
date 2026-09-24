@@ -28,6 +28,8 @@ export function DataTable<T>({ columns, data, className }: { columns: ColumnDef<
               {hg.headers.map((h) => (
                 <th
                   key={h.id}
+                  scope="col"
+                  aria-sort={h.column.getIsSorted() === "asc" ? "ascending" : h.column.getIsSorted() === "desc" ? "descending" : "none"}
                   onClick={h.column.getToggleSortingHandler()}
                   className="cursor-pointer select-none px-4 py-3 font-semibold"
                 >

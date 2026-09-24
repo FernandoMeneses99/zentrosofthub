@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
 
 export default function TicketAiSuggest({ ticketId }: { ticketId: string }) {
   const [msg, setMsg] = useState("");
@@ -9,8 +10,7 @@ export default function TicketAiSuggest({ ticketId }: { ticketId: string }) {
     <span>
       <Button
         variant="secondary" disabled={loading}
-        onClick={async () => {
-          setLoading(true);
+        onClick={async () => {          setLoading(true);
           setMsg("");
           try {
             const r = await fetch("/api/ai/suggest", {
@@ -27,7 +27,7 @@ export default function TicketAiSuggest({ ticketId }: { ticketId: string }) {
           setLoading(false);
         }}
       >
-        {loading ? "Analizando…" : "✨ Sugerir prioridad (IA)"}
+        {loading ? "Analizando…" : (<><Sparkles size={15} /> Sugerir prioridad (IA)</>)}
       </Button>
       {msg && <p className="mt-1 text-xs">{msg}</p>}
     </span>

@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase-server";
 import NewProjectForm from "./NewProjectForm";
 import { ProjectsTable, TasksTable } from "./tables";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function ProyectosPage() {
   const supabase = await createServerSupabase();
@@ -16,7 +17,7 @@ export default async function ProyectosPage() {
   ]);
   return (
     <main className="space-y-6 p-8">
-      <h1 className="text-2xl font-extrabold text-[#0a1628]">Proyectos — {projects?.length ?? 0} proyectos, {tasks?.length ?? 0} tareas</h1>
+      <PageHeader title="Proyectos" subtitle={`${projects?.length ?? 0} proyectos · ${tasks?.length ?? 0} tareas`} />
       <section className="space-y-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-[#64748b]">Proyectos</h2>
         <ProjectsTable rows={projects ?? []} />
