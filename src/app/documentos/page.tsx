@@ -1,5 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase-server";
-import { canWrite } from "@/lib/access";
+import { canWrite, canOperate } from "@/lib/access";
 import { DocumentsTable } from "./tables";
 import UploadForm from "./UploadForm";
 import { PageHeader } from "@/components/ui/page-header";
@@ -11,6 +11,9 @@ export default async function DocumentosPage() {
   const { data: memberships } = await supabase.from("organization_members").select("org_id,tenant_role").eq("user_id", user.id);
   const orgId = memberships?.[0]?.org_id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
+  if (!canOperate(memberships?.[0]?.tenant_role)) {
+    return <main className="space-y-4 p-8"><h1 className="text-2xl font-extrabold">Documentos</h1><p>Módulo no disponible para tu rol.</p></main>;
+  }
   const write = canWrite(memberships?.[0]?.tenant_role);
 
   const { data: docs, error } = await supabase.from("documents")

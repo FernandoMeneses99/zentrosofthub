@@ -1,5 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase-server";
-import { canWrite } from "@/lib/access";
+import { canWrite, canOperate } from "@/lib/access";
 import { Card, CardTitle, Badge } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import EditCompanyForm from "./EditCompanyForm";
@@ -13,6 +13,9 @@ export default async function CompanyDetail({ params }: { params: Promise<{ id: 
   const { data: memberships } = await supabase.from("organization_members").select("org_id,tenant_role").eq("user_id", user.id);
   const orgId = memberships?.[0]?.org_id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
+  if (!canOperate(memberships?.[0]?.tenant_role)) {
+    return <main className="space-y-4 p-8"><p>Módulo no disponible para tu rol.</p><Link href="/dashboard">← Dashboard</Link></main>;
+  }
   const write = canWrite(memberships?.[0]?.tenant_role);
 
   const { data: c, error } = await supabase.from("companies").select("*")

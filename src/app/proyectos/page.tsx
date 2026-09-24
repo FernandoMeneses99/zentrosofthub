@@ -1,5 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase-server";
-import { canWrite } from "@/lib/access";
+import { canWrite, canOperate } from "@/lib/access";
 import NewProjectForm from "./NewProjectForm";
 import { ProjectsTable, TasksTable } from "./tables";
 import { PageHeader } from "@/components/ui/page-header";
@@ -11,6 +11,9 @@ export default async function ProyectosPage() {
   const { data: memberships } = await supabase.from("organization_members").select("org_id,tenant_role").eq("user_id", user.id);
   const orgId = memberships?.[0]?.org_id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
+  if (!canOperate(memberships?.[0]?.tenant_role)) {
+    return <main className="space-y-4 p-8"><h1 className="text-2xl font-extrabold">Proyectos</h1><p>Módulo no disponible para tu rol.</p></main>;
+  }
   const write = canWrite(memberships?.[0]?.tenant_role);
   const [{ data: projects }, { data: tasks }, { data: companies }] = await Promise.all([
     supabase.from("projects").select("id,nombre,estado,company_id").eq("organization_id", orgId).order("nombre"),

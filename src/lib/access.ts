@@ -3,6 +3,8 @@
 export const WRITE_ROLES = ["owner", "admin", "manager", "employee"];
 export const AUDIT_ROLES = ["owner", "admin"];
 export const ADMIN_ROLES = ["owner", "admin"];
+// Módulos operativos (CRM/proyectos/documentos): solo gestión, no técnicos.
+export const OPS_ROLES = ["owner", "admin", "manager"];
 
 export function canWrite(role?: string | null): boolean {
   return !!role && WRITE_ROLES.includes(role);
@@ -12,4 +14,7 @@ export function canAudit(role?: string | null): boolean {
 }
 export function isAdmin(role?: string | null): boolean {
   return !!role && ADMIN_ROLES.includes(role);
+}
+export function canOperate(role?: string | null): boolean {
+  return !!role && OPS_ROLES.includes(role);
 }

@@ -1,15 +1,103 @@
+import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { Card, CardTitle, Badge } from "@/components/ui/card";
 import { HoursLine, HoursBars, BillablePie } from "@/components/charts";
-import { Building2, Users, Clock, CircleCheck, TriangleAlert } from "lucide-react";
+import { Building2, Users, Clock, CircleCheck, TriangleAlert, Inbox, Wrench } from "lucide-react";
 
 export default async function Dashboard() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return <main className="p-8"><a href="/login">Inicia sesión</a></main>;
-  const { data: orgs } = await supabase.from("organizations").select("id,name,slug");
+  const [{ data: orgs }, { data: memberships }, { data: profile }] = await Promise.all([
+    supabase.from("organizations").select("id,name,slug"),
+    supabase.from("organization_members").select("org_id,tenant_role").eq("user_id", user.id),
+    supabase.from("profiles").select("display_name").eq("id", user.id).single(),
+  ]);
   const orgId = orgs?.[0]?.id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
+  const role = memberships?.[0]?.tenant_role ?? "viewer";
+  const nombre = profile?.display_name || (user.email ?? "técnico").split("@")[0];
+  const isTech = !["owner", "admin", "manager"].includes(role);
+
+  if (isTech) {
+    const now = new Date().toISOString();
+    const [{ data: mios }, { data: misHoras }] = await Promise.all([
+      supabase.from("tickets").select("id,titulo,estado,prioridad,sla_vence")
+        .eq("organization_id", orgId).eq("asignado_a", user.id).neq("estado", "cerrado")
+        .order("sla_vence", { ascending: true, nullsFirst: false }).limit(20),
+      supabase.from("time_entries").select("duration_min,fecha").eq("organization_id", orgId)
+        .eq("user_id", user.id).gte("fecha", new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10)),
+    ]);
+    const abiertos = mios?.length ?? 0;
+    const vencidos = (mios ?? []).filter((t) => t.sla_vence && t.sla_vence < now);
+    const horasSemana = ((misHoras ?? []).reduce((a, h) => a + (h.duration_min ?? 0), 0) / 60).toFixed(1);
+    const hora = new Date().getHours();
+    const saludo = hora < 12 ? "Buenos días" : hora < 18 ? "Buenas tardes" : "Buenas noches";
+
+    return (
+      <main className="space-y-6 p-8">
+        <div className="overflow-hidden rounded-[20px] bg-[#0a1628] p-6 text-white">
+          <h1 className="text-2xl font-extrabold tracking-tight">{saludo}, {nombre}</h1>
+          <p className="mt-1 text-sm text-slate-300">
+            Tienes <strong className="text-white">{abiertos} tickets asignados</strong>
+            {vencidos.length > 0
+              ? <> · <strong className="text-amber-300">{vencidos.length} vencidos</strong> que necesitan atención</>
+              : " · todo al día, buen trabajo"}
+            {" · "}{horasSemana}h registradas esta semana.
+          </p>
+          <div className="mt-4 h-1 w-full rounded-full bg-gradient-to-r from-[#4b82c3] via-[#4fd290] to-transparent" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+          {[
+            { label: "Mis tickets abiertos", value: abiertos, Icon: Inbox },
+            { label: "Vencidos", value: vencidos.length, Icon: TriangleAlert },
+            { label: "Mis horas (7 días)", value: horasSemana, Icon: Clock },
+          ].map(({ label, value, Icon }) => (
+            <Card key={label} className="flex items-center gap-3">
+              <span className="rounded-xl bg-[#4b82c3]/10 p-2.5 text-[#4b82c3]"><Icon size={20} aria-hidden="true" /></span>
+              <span>
+                <span className="block text-2xl font-extrabold text-[#0a1628]">{value}</span>
+                <CardTitle>{label}</CardTitle>
+              </span>
+            </Card>
+          ))}
+        </div>
+
+        <Card>
+          <CardTitle>Mis tickets asignados</CardTitle>
+          {(!mios || mios.length === 0) ? (
+            <p className="mt-2 flex items-center gap-2 text-sm text-[#64748b]">
+              <Wrench size={15} aria-hidden="true" /> Sin tickets asignados por ahora.
+            </p>
+          ) : (
+            <ul className="mt-2 divide-y divide-[#eef2f7] text-sm">
+              {mios.map((t) => {
+                const venc = t.sla_vence && t.sla_vence < now;
+                return (
+                  <li key={t.id} className="flex items-center justify-between gap-2 py-2">
+                    <Link href={`/tickets/${t.id}`} className="font-medium text-[#0a1628]">{t.titulo}</Link>
+                    <span className="flex gap-1.5">
+                      <Badge tone="info">{t.estado.replace("_", " ")}</Badge>
+                      {venc ? <Badge tone="warn">vencido</Badge> : <Badge tone="default">{t.prioridad}</Badge>}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+
+        <Card>
+          <CardTitle>Mis SLA</CardTitle>
+          <BillablePie data={[
+            { name: "Al día", value: abiertos - vencidos.length },
+            { name: "Vencidos", value: vencidos.length },
+          ]} />
+        </Card>
+      </main>
+    );
+  }
 
   const [{ count: nCompanies }, { count: nContacts }, { data: entries }, { data: companies }, { count: nVencidos }, { data: actividad }] = await Promise.all([
     supabase.from("companies").select("id", { count: "exact", head: true }).eq("organization_id", orgId).is("deleted_at", null),
@@ -56,7 +144,7 @@ export default async function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-[#0a1628]">{orgs?.[0]?.name}</h1>
-          <p className="text-sm text-[#64748b]">{user.email} <Badge tone="ok">owner</Badge></p>
+          <p className="text-sm text-[#64748b]">{user.email} <Badge tone="ok">{role}</Badge></p>
         </div>
         <Badge tone={trend >= 0 ? "ok" : "warn"}>{trend >= 0 ? "▲" : "▼"} {Math.abs(trend).toFixed(1)}% vs semana anterior</Badge>
       </div>

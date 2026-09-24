@@ -10,11 +10,11 @@ import { createClient } from "@/lib/supabase-client";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard, roles: null },
-  { href: "/crm", label: "CRM", Icon: Building2, roles: null },
+  { href: "/crm", label: "CRM", Icon: Building2, roles: ["owner", "admin", "manager"] },
   { href: "/horas", label: "Horas", Icon: Clock, roles: null },
   { href: "/tickets", label: "Tickets", Icon: Inbox, roles: ["owner", "admin", "manager", "employee"] },
-  { href: "/proyectos", label: "Proyectos", Icon: FolderKanban, roles: ["owner", "admin", "manager", "employee"] },
-  { href: "/documentos", label: "Documentos", Icon: Files, roles: ["owner", "admin", "manager", "employee"] },
+  { href: "/proyectos", label: "Proyectos", Icon: FolderKanban, roles: ["owner", "admin", "manager"] },
+  { href: "/documentos", label: "Documentos", Icon: Files, roles: ["owner", "admin", "manager"] },
   { href: "/usuarios", label: "Usuarios", Icon: Users, roles: ["owner", "admin"] },
   { href: "/auditoria", label: "Auditoría", Icon: ShieldCheck, roles: ["owner", "admin"] },
   { href: "/notificaciones", label: "Avisos", Icon: Bell, roles: ["owner", "admin", "manager", "employee"] },
