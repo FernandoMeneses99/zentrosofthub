@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase-client";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
-  const supabase = createClient();
   return (
     <main style={{ padding: 32, maxWidth: 420 }}>
       <h1>Ingresar al Hub</h1>
@@ -17,6 +16,7 @@ export default function LoginPage() {
       />
       <button
         onClick={async () => {
+          const supabase = createClient();
           const { error } = await supabase.auth.signInWithOtp({
             email, options: { emailRedirectTo: window.location.origin + "/auth/callback?next=/dashboard" },
           });

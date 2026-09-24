@@ -6,8 +6,8 @@ export default function TicketStatusForm({ ticketId, estado, prioridad, asignado
   ticketId: string; estado: string; prioridad: string; asignado: string | null; members: string[];
 }) {
   const [msg, setMsg] = useState("");
-  const supabase = createClient();
   const update = async (patch: Record<string, string | null>) => {
+    const supabase = createClient();
     const { error } = await supabase.from("tickets").update({
       ...patch, closed_at: patch.estado === "cerrado" ? new Date().toISOString() : null,
     }).eq("id", ticketId);

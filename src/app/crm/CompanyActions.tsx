@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase-client";
 
 export default function CompanyActions({ id, razon }: { id: string; razon: string }) {
   const [msg, setMsg] = useState("");
-  const supabase = createClient();
   return (
     <span>
       {" "}
@@ -12,6 +11,7 @@ export default function CompanyActions({ id, razon }: { id: string; razon: strin
         onClick={async () => {
           const nuevo = prompt("Nuevo nombre comercial / razón social:", razon);
           if (!nuevo) return;
+          const supabase = createClient();
           const { error } = await supabase.from("companies").update({ razon_social: nuevo }).eq("id", id);
           setMsg(error ? "Error: " + error.message : "Actualizada. Recarga.");
         }}
@@ -19,6 +19,7 @@ export default function CompanyActions({ id, razon }: { id: string; razon: strin
       <button
         onClick={async () => {
           if (!confirm(`Desactivar ${razon}? (soft-delete)`)) return;
+          const supabase = createClient();
           const { error } = await supabase.from("companies").update({ deleted_at: new Date().toISOString() }).eq("id", id);
           setMsg(error ? "Error: " + error.message : "Desactivada. Recarga.");
         }}
