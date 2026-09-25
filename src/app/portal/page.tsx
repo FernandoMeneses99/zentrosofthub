@@ -3,7 +3,8 @@ import { createServerSupabase } from "@/lib/supabase-server";
 import { Card, CardTitle, Badge } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { StageBadges } from "@/components/ui/service-stages";
-import { Files, Inbox, Wrench, Clock, Megaphone } from "lucide-react";
+import TelegramLink from "./TelegramLink";
+import { Files, Inbox, Wrench, Clock, Megaphone, CalendarClock } from "lucide-react";
 
 // Portal del cliente: solo datos de su(s) empresa(s) (RLS 026 lo garantiza).
 export default async function PortalPage() {
@@ -16,12 +17,14 @@ export default async function PortalPage() {
     return <main className="space-y-4 p-8"><h1 className="text-2xl font-extrabold">Portal</h1><p>Solo disponible para cuentas de cliente.</p></main>;
   }
 
-  const [{ data: companies }, { data: tickets }, { data: docs }, { data: hours }, { data: anuncios }] = await Promise.all([
+  const [{ data: companies }, { data: tickets }, { data: docs }, { data: hours }, { data: anuncios }, { data: me }, { data: mant }] = await Promise.all([
     supabase.from("companies").select("id,razon_social,nombre_comercial,estado").is("deleted_at", null),
     supabase.from("tickets").select("id,titulo,estado,prioridad,sla_vence").order("created_at", { ascending: false }).limit(20),
     supabase.from("documents").select("id,nombre,categoria,created_at").order("created_at", { ascending: false }).limit(20),
     supabase.from("time_entries").select("duration_min").limit(1000),
     supabase.from("kb_articles").select("id,titulo,created_at").order("created_at", { ascending: false }).limit(5),
+    supabase.from("contacts").select("telegram_chat_id").eq("user_id", user.id).limit(1),
+    supabase.from("mantenimientos").select("id,titulo,inicio,fin").gte("fin", new Date().toISOString()).order("inicio").limit(3),
   ]);
   const horasPlan = ((hours ?? []).reduce((a, h) => a + (h.duration_min ?? 0), 0) / 60).toFixed(1);
   const now = new Date();
@@ -94,6 +97,17 @@ export default async function PortalPage() {
           Ver detalle en <Link href="/servicio">Servicio</Link> · tus tickets en <Link href="/tickets">Tickets</Link>.
         </p>
       </Card>
+      <TelegramLink initial={me?.[0]?.telegram_chat_id ?? ""} />
+      {(mant ?? []).length > 0 && (
+        <Card>
+          <CardTitle><CalendarClock size={14} className="mr-1 inline" />Próximos mantenimientos</CardTitle>
+          <ul className="mt-2 space-y-1 text-sm">
+            {(mant ?? []).map((m) => (
+              <li key={m.id}>{m.titulo} <span className="text-xs text-[#64748b]">({m.inicio.slice(0, 16).replace("T", " ")})</span></li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </main>
   );
 }

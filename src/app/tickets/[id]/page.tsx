@@ -8,6 +8,7 @@ import TicketAiSuggest from "./TicketAiSuggest";
 import Discussion from "./Discussion";
 import ClientResolve from "./ClientResolve";
 import GithubLinks from "./GithubLinks";
+import Attachments from "./Attachments";
 import { TicketStage } from "@/components/ui/service-stages";
 
 export default async function TicketDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -23,7 +24,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
   const isClient = memberships?.[0]?.tenant_role === "client";
 
   const { data: ticket, error } = await supabase.from("tickets")
-    .select("id,titulo,descripcion,estado,prioridad,sla_vence,created_at,company_id,asignado_a,rating")
+    .select("id,titulo,descripcion,estado,prioridad,sla_vence,created_at,company_id,asignado_a,rating,encuesta")
     .eq("id", id).eq("organization_id", orgId).single();
   if (error || !ticket)
     return <main className="space-y-4 p-8"><p>Ticket no encontrado o sin acceso.</p><Link href="/tickets">← Tickets</Link></main>;
@@ -40,6 +41,8 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
   const nameOf = (uid: string | null, stored?: string | null) =>
     stored || (uid === user.id ? "Tú" : profiles?.find((p) => p.id === uid)?.display_name ?? "Usuario");
   const discussion = (comments ?? []).map((c) => ({ ...c, autor_nombre: nameOf(c.autor, c.autor_nombre) }));
+  const { data: attachments } = await supabase.from("documents")
+    .select("id,nombre,mime,storage_path").eq("ticket_id", id).order("created_at");
   const { data: links } = write
     ? await supabase.from("ticket_links").select("id,tipo,url,ref").eq("ticket_id", id).order("created_at")
     : { data: [] };
@@ -58,7 +61,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
           <div className="flex gap-2">
             <Badge tone="info">{ticket.estado}</Badge>
             <Badge tone={ticket.prioridad === "baja" ? "default" : "warn"}>{ticket.prioridad}</Badge>
-            {isClient && <ClientResolve ticketId={id} estado={ticket.estado} rating={ticket.rating} />}
+            {isClient && <ClientResolve ticketId={id} estado={ticket.estado} rating={ticket.rating} encuesta={ticket.encuesta} />}
           </div>
         </div>
       </div>
@@ -70,6 +73,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
             <TicketStage estado={ticket.estado} />
           </div>
           <Discussion ticketId={id} orgId={orgId} userId={user.id} initial={discussion} canWrite={comment} />
+          <Attachments docs={attachments ?? []} />
           {write && <GithubLinks ticketId={id} orgId={orgId} initial={links ?? []} />}
           {!isClient && (similares ?? []).length > 0 && (
             <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-sm">

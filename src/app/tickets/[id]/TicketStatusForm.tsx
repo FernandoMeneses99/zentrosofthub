@@ -11,7 +11,14 @@ export default function TicketStatusForm({ ticketId, estado, prioridad, asignado
     const { error } = await supabase.from("tickets").update({
       ...patch, closed_at: patch.estado === "cerrado" ? new Date().toISOString() : null,
     }).eq("id", ticketId);
-    setMsg(error ? "Error: " + error.message : "Guardado. Recarga.");
+    if (error) { setMsg("Error: " + error.message); return; }
+    setMsg("Guardado. Recarga.");
+    if (patch.estado) {
+      fetch("/api/tickets/notificar", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticket_id: ticketId }),
+      }).catch(() => {});
+    }
   };
   return (
     <div className="space-y-3 text-sm">

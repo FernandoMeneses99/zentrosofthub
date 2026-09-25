@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase-client";
@@ -33,6 +33,23 @@ export default function Discussion({ ticketId, orgId, userId, initial, canWrite 
   const [msg, setMsg] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [live, setLive] = useState(false);
+
+  // Realtime: mensajes nuevos de otros aparecen sin recargar.
+  useEffect(() => {
+    const supabase = createClient();
+    const ch = supabase
+      .channel(`ticket-${ticketId}`)
+      .on("postgres_changes",
+        { event: "INSERT", schema: "public", table: "ticket_comments", filter: `ticket_id=eq.${ticketId}` },
+        (payload) => {
+          const row = payload.new as Comment;
+          setComments((cs) => (cs.some((c) => c.id === row.id) ? cs : [...cs, row]));
+          setLive(true);
+        })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [ticketId]);
 
   const form = useForm({
     defaultValues: { cuerpo: "", es_interna: false as boolean },
@@ -66,6 +83,7 @@ export default function Discussion({ ticketId, orgId, userId, initial, canWrite 
     <section aria-label="Observaciones del caso">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-bold text-[#0a1628]">Observaciones ({comments.length})</h2>
+        {live && <span className="flex items-center gap-1 text-xs text-green-700"><span className="size-2 animate-pulse rounded-full bg-green-500" /> en vivo</span>}
       </div>
 
       {canWrite && (

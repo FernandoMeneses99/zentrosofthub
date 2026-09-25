@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Building2, Clock, ShieldCheck, User, Inbox,
-  FolderKanban, Users, Files, Bell, LogOut, Wrench, ChartBar, Settings, BookOpen, House,
+  FolderKanban, Users, Files, Bell, LogOut, Wrench, ChartBar, Settings, BookOpen, House, CalendarClock,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-client";
@@ -15,6 +15,7 @@ const links = [
   { href: "/horas", label: "Horas", Icon: Clock, roles: ["owner", "admin", "manager", "employee", "viewer"] },
   { href: "/tickets", label: "Tickets", Icon: Inbox, roles: ["owner", "admin", "manager", "employee", "client"] },
   { href: "/servicio", label: "Servicio", Icon: Wrench, roles: null },
+  { href: "/mantenimientos", label: "Mantenimientos", Icon: CalendarClock, roles: null },
   { href: "/reportes", label: "Reportes", Icon: ChartBar, roles: ["owner", "admin", "manager"] },
   { href: "/proyectos", label: "Proyectos", Icon: FolderKanban, roles: ["owner", "admin", "manager"] },
   { href: "/documentos", label: "Documentos", Icon: Files, roles: ["owner", "admin", "manager"] },
