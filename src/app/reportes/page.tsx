@@ -16,12 +16,13 @@ export default async function ReportesPage() {
     return <main className="space-y-4 p-8"><h1 className="text-2xl font-extrabold">Reportes</h1><p>Módulo no disponible para tu rol.</p></main>;
   }
 
-  const [{ data: hours }, { data: tickets }, { data: members }, { data: profiles }, { data: rated }] = await Promise.all([
+  const [{ data: hours }, { data: tickets }, { data: members }, { data: profiles }, { data: rated }, { data: openT }] = await Promise.all([
     supabase.from("time_entries").select("duration_min,billable,user_id,company_id").eq("organization_id", orgId).limit(1000),
     supabase.from("tickets").select("estado,prioridad,sla_vence").eq("organization_id", orgId).limit(1000),
     supabase.from("organization_members").select("user_id,tenant_role").eq("org_id", orgId).eq("status", "active"),
     supabase.from("profiles").select("id,display_name"),
     supabase.from("tickets").select("rating").eq("organization_id", orgId).not("rating", "is", null),
+    supabase.from("tickets").select("asignado_a").eq("organization_id", orgId).neq("estado", "cerrado").limit(500),
   ]);
   const ratings = (rated ?? []).map((r) => r.rating as number);
   const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : "—";
@@ -32,6 +33,12 @@ export default async function ReportesPage() {
     name: nameOf(m.user_id).slice(0, 18),
     horas: h2h((hours ?? []).filter((h) => h.user_id === m.user_id).reduce((a, h) => a + (h.duration_min ?? 0), 0)),
   })).filter((t) => t.horas > 0);
+
+  const workload = new Map<string, number>();
+  (openT ?? []).forEach((t) => {
+    const k = t.asignado_a ? nameOf(t.asignado_a).slice(0, 18) : "Sin asignar";
+    workload.set(k, (workload.get(k) ?? 0) + 1);
+  });
 
   const now = new Date();
   const abiertos = (tickets ?? []).filter((t) => t.estado !== "cerrado");
@@ -49,6 +56,10 @@ export default async function ReportesPage() {
         <Card>
           <CardTitle>Horas por técnico</CardTitle>
           <HoursBars data={byTech} />
+        </Card>
+        <Card>
+          <CardTitle>Carga: abiertos por responsable</CardTitle>
+          <HoursBars data={[...workload.entries()].map(([name, horas]) => ({ name, horas }))} />
         </Card>
         <Card>
           <CardTitle>SLA: al día vs vencidos</CardTitle>

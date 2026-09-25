@@ -13,9 +13,12 @@ export default async function AjustesPage() {
   if (!isAdmin(memberships?.[0]?.tenant_role)) {
     return <main className="space-y-4 p-8"><h1 className="text-2xl font-extrabold">Ajustes</h1><p>Solo owner/admin.</p></main>;
   }
-  const { data: pols } = await supabase.from("sla_policies").select("prioridad,horas").eq("organization_id", orgId);
+  const { data: pols } = await supabase.from("sla_policies").select("prioridad,horas,primera_horas").eq("organization_id", orgId);
   const initial: Record<string, number> = {};
-  (pols ?? []).forEach((p) => { initial[p.prioridad] = p.horas; });
+  (pols ?? []).forEach((p) => {
+    initial[p.prioridad] = p.horas;
+    if (p.primera_horas) initial[`primera_${p.prioridad}`] = p.primera_horas;
+  });
   const { data: integ } = await supabase.from("integraciones").select("config").eq("organization_id", orgId).eq("provider", "telegram").single();
   const cfg = (integ?.config ?? {}) as { bot_token?: string; chat_id?: string };
   return (

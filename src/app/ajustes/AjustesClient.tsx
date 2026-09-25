@@ -14,6 +14,9 @@ export default function AjustesClient({ orgId, initial, telegram }: {
   const [vals, setVals] = useState<Record<string, string>>(
     Object.fromEntries(PRIOS.map((p) => [p, String(initial[p] ?? "")])),
   );
+  const [first, setFirst] = useState<Record<string, string>>(
+    Object.fromEntries(PRIOS.map((p) => [p, String(initial[`primera_${p}`] ?? "")])),
+  );
   const [msg, setMsg] = useState("");
   const [bot, setBot] = useState(telegram.bot_token);
   const [chat, setChat] = useState(telegram.chat_id);
@@ -26,11 +29,23 @@ export default function AjustesClient({ orgId, initial, telegram }: {
         <div className="mt-3 grid gap-2 sm:grid-cols-4">
           {PRIOS.map((p) => (
             <label key={p} className="text-sm font-medium">
-              {p}
+              Resolución {p}
               <input
-                type="number" min={1} aria-label={`Horas SLA ${p}`}
+                type="number" min={1} aria-label={`Horas SLA resolución ${p}`}
                 className="mt-1 w-full rounded-[10px] border border-[#e6ebf2] px-3 py-2"
                 value={vals[p]} onChange={(e) => setVals({ ...vals, [p]: e.target.value })}
+              />
+            </label>
+          ))}
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-4">
+          {PRIOS.map((p) => (
+            <label key={`pr-${p}`} className="text-sm font-medium">
+              1ª respuesta {p}
+              <input
+                type="number" min={1} aria-label={`Horas primera respuesta ${p}`}
+                className="mt-1 w-full rounded-[10px] border border-[#e6ebf2] px-3 py-2"
+                value={first[p]} onChange={(e) => setFirst({ ...first, [p]: e.target.value })}
               />
             </label>
           ))}
@@ -39,10 +54,13 @@ export default function AjustesClient({ orgId, initial, telegram }: {
           className="mt-3"
           onClick={async () => {
             const supabase = createClient();
-            const rows = PRIOS.filter((p) => vals[p] !== "").map((p) => ({
-              organization_id: orgId, prioridad: p, horas: parseInt(vals[p], 10),
-            }));
-            if (rows.some((r) => !r.horas || r.horas < 1)) { setMsg("Error: horas inválidas."); return; }
+            const rows = PRIOS.flatMap((p) => {
+              const h = vals[p] !== "" ? parseInt(vals[p], 10) : null;
+              const ph = first[p] !== "" ? parseInt(first[p], 10) : null;
+              if ((h !== null && h < 1) || (ph !== null && ph < 1)) return [];
+              if (h === null && ph === null) return [];
+              return [{ organization_id: orgId, prioridad: p, horas: h ?? 72, primera_horas: ph }];
+            });
             const { error } = await supabase.from("sla_policies").upsert(rows, { onConflict: "organization_id,prioridad" });
             setMsg(error ? "Error: " + error.message : "SLA guardado. Aplica a tickets nuevos.");
           }}
