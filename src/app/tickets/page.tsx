@@ -26,6 +26,11 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
   const write = canWrite(memberships?.[0]?.tenant_role);
   const role = memberships?.[0]?.tenant_role as string | undefined;
   const canCreate = write || role === "client";
+  let clientCompany: string | null = null;
+  if (role === "client") {
+    const { data: mine } = await supabase.from("contacts").select("company_id").eq("user_id", user.id).limit(1);
+    clientCompany = mine?.[0]?.company_id ?? null;
+  }
 
   const filtro = (await searchParams).estado ?? "todos";
   let tickets: { id: string; titulo: string; estado: string; prioridad: string; created_at: string; sla_vence: string | null }[] | null = null;
@@ -143,7 +148,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
           </div>
         )}
 
-        {canCreate && <NewTicketForm orgId={orgId} companies={companies ?? []} requireCompany={role === "client"} />}
+        {canCreate && <NewTicketForm orgId={orgId} companies={companies ?? []} requireCompany={role === "client"} fixedCompanyId={clientCompany} />}
         <Link href="/dashboard"><Button variant="ghost">← Dashboard</Button></Link>
       </div>
     </main>

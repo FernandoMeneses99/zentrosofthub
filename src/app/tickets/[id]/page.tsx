@@ -6,6 +6,7 @@ import Link from "next/link";
 import TicketStatusForm from "./TicketStatusForm";
 import TicketAiSuggest from "./TicketAiSuggest";
 import Discussion from "./Discussion";
+import ClientResolve from "./ClientResolve";
 import { TicketStage } from "@/components/ui/service-stages";
 
 export default async function TicketDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -21,13 +22,15 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
   const isClient = memberships?.[0]?.tenant_role === "client";
 
   const { data: ticket, error } = await supabase.from("tickets")
-    .select("id,titulo,descripcion,estado,prioridad,sla_vence,created_at,company_id,asignado_a")
+    .select("id,titulo,descripcion,estado,prioridad,sla_vence,created_at,company_id,asignado_a,rating")
     .eq("id", id).eq("organization_id", orgId).single();
   if (error || !ticket)
     return <main className="space-y-4 p-8"><p>Ticket no encontrado o sin acceso.</p><Link href="/tickets">← Tickets</Link></main>;
 
   const [{ data: comments }, { data: companies }, { data: members }, { data: similares }, { data: profiles }] = await Promise.all([
-    supabase.from("ticket_comments").select("id,cuerpo,es_interna,created_at,autor").eq("ticket_id", id).order("created_at"),
+    (isClient
+      ? supabase.from("ticket_comments").select("id,cuerpo,es_interna,created_at,autor").eq("ticket_id", id).eq("es_interna", false).order("created_at")
+      : supabase.from("ticket_comments").select("id,cuerpo,es_interna,created_at,autor").eq("ticket_id", id).order("created_at")),
     supabase.from("companies").select("id,razon_social").eq("organization_id", orgId).is("deleted_at", null),
     supabase.from("organization_members").select("user_id").eq("org_id", orgId).eq("status", "active"),
     supabase.rpc("similar_tickets", { p_org: orgId, p_titulo: ticket.titulo, p_excluir: id }),
@@ -51,6 +54,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
           <div className="flex gap-2">
             <Badge tone="info">{ticket.estado}</Badge>
             <Badge tone={ticket.prioridad === "baja" ? "default" : "warn"}>{ticket.prioridad}</Badge>
+            {isClient && <ClientResolve ticketId={id} estado={ticket.estado} rating={ticket.rating} />}
           </div>
         </div>
       </div>

@@ -13,24 +13,40 @@ const schema = z.object({
   company_id: z.string().default(""),
 });
 
-export default function NewTicketForm({ orgId, companies, requireCompany }: {
-  orgId: string; companies: { id: string; razon_social: string }[]; requireCompany?: boolean;
+export default function NewTicketForm({ orgId, companies, requireCompany, fixedCompanyId }: {
+  orgId: string; companies: { id: string; razon_social: string }[];
+  requireCompany?: boolean; fixedCompanyId?: string | null;
 }) {
   const [msg, setMsg] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const form = useForm({
-    defaultValues: { titulo: "", descripcion: "", prioridad: "media" as const, company_id: "" },
+    defaultValues: { titulo: "", descripcion: "", prioridad: "media" as const, company_id: fixedCompanyId ?? "" },
     onSubmit: async ({ value }) => {
       const parsed = schema.safeParse(value);
       if (!parsed.success) { setMsg("Error: " + parsed.error.issues[0].message); return; }
-      if (requireCompany && !value.company_id) { setMsg("Error: elige tu empresa."); return; }
+      const companyId = fixedCompanyId ?? value.company_id;
+      if (requireCompany && !companyId) { setMsg("Error: sin empresa asignada. Pide al owner que vincule tu contacto."); return; }
+      if (file && file.size > 10 * 1024 * 1024) { setMsg("Error: adjunto máximo 10 MB."); return; }
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from("tickets").insert({
+      const { data: ticket, error } = await supabase.from("tickets").insert({
         organization_id: orgId, titulo: value.titulo, descripcion: value.descripcion || null,
-        prioridad: value.prioridad, company_id: value.company_id || null, created_by: user?.id,
-      });
-      setMsg(error ? "Error: " + error.message : "Ticket creado. Recarga.");
-      if (!error) form.reset();
+        prioridad: value.prioridad, company_id: companyId || null, created_by: user?.id,
+      }).select("id").single();
+      if (error) { setMsg("Error: " + error.message); return; }
+      if (file && ticket) {
+        const path = `org/${orgId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+        const { error: upErr } = await supabase.storage.from("documentos").upload(path, file);
+        if (upErr) { setMsg("Ticket creado, pero falló el adjunto: " + upErr.message); return; }
+        await supabase.from("documents").insert({
+          organization_id: orgId, company_id: companyId || null, ticket_id: ticket.id,
+          nombre: file.name, storage_path: path, mime: file.type || null,
+          size_bytes: file.size, categoria: "evidencia",
+        });
+      }
+      setMsg("Ticket creado. Recarga.");
+      setFile(null);
+      form.reset();
     },
   });
   return (
@@ -64,16 +80,28 @@ export default function NewTicketForm({ orgId, companies, requireCompany }: {
         </form.Field>
         <form.Field name="company_id">
           {(field) => (
-            <select
-              className="rounded-[10px] border border-[#e6ebf2] px-3 py-2"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-            >
-              <option value="">Sin empresa</option>
-              {companies.map((c) => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
-            </select>
+            fixedCompanyId ? (
+              <p className="rounded-[10px] bg-[#f8fafc] px-3 py-2 text-sm text-[#64748b]">
+                Empresa: {companies.find((c) => c.id === fixedCompanyId)?.razon_social ?? "asignada"}
+              </p>
+            ) : (
+              <select
+                className="rounded-[10px] border border-[#e6ebf2] px-3 py-2"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+              >
+                <option value="">Sin empresa</option>
+                {companies.map((c) => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
+              </select>
+            )
           )}
         </form.Field>
+        <div>
+          <label htmlFor="ticket-file" className="sr-only">Adjuntar evidencia (opcional, máx 10 MB)</label>
+          <input id="ticket-file" type="file" aria-label="Adjuntar evidencia"
+            className="w-full rounded-[10px] border border-[#e6ebf2] px-3 py-2 text-sm"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        </div>
         <form.Field name="descripcion">
           {(field) => (
             <input
