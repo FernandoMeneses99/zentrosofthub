@@ -25,9 +25,9 @@ function Avatar({ name }: { name: string }) {
   );
 }
 
-export default function Discussion({ ticketId, orgId, userId, initial, canWrite }: {
+export default function Discussion({ ticketId, orgId, userId, initial, canWrite, templates }: {
   ticketId: string; orgId: string; userId: string;
-  initial: Comment[]; canWrite: boolean;
+  initial: Comment[]; canWrite: boolean; templates: { id: string; titulo: string; cuerpo: string }[];
 }) {
   const [comments, setComments] = useState(initial);
   const [msg, setMsg] = useState("");
@@ -88,6 +88,24 @@ export default function Discussion({ ticketId, orgId, userId, initial, canWrite 
 
       {canWrite && (
         <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit(); }} className="mb-6">
+          {templates.length > 0 && (
+            <div className="mb-2 flex gap-2">
+              <label htmlFor="tpl-select" className="sr-only">Insertar plantilla</label>
+              <select
+                id="tpl-select" aria-label="Insertar plantilla de respuesta"
+                className="rounded-[10px] border border-[#e6ebf2] px-3 py-1.5 text-sm"
+                defaultValue=""
+                onChange={(e) => {
+                  const t = templates.find((x) => x.id === e.target.value);
+                  if (t) form.setFieldValue("cuerpo", t.cuerpo);
+                  e.target.value = "";
+                }}
+              >
+                <option value="">Insertar plantilla…</option>
+                {templates.map((t) => <option key={t.id} value={t.id}>{t.titulo}</option>)}
+              </select>
+            </div>
+          )}
           <div className="mb-3 rounded-lg rounded-t-lg border border-[#e6ebf2] bg-white px-4 py-2">
             <label htmlFor="comment-body" className="sr-only">Tu observación</label>
             <form.Field name="cuerpo">

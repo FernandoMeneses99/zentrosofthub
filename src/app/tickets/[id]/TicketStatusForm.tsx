@@ -25,7 +25,7 @@ export default function TicketStatusForm({ ticketId, estado, prioridad, asignado
       <label className="block">Estado
         <select className="mt-1 w-full rounded-lg border border-[#e6ebf2] px-2 py-1.5" value={estado}
           onChange={(e) => update({ estado: e.target.value })}>
-          {["abierto", "en_proceso", "pendiente", "cerrado"].map((s) => <option key={s} value={s}>{s}</option>)}
+          {["abierto", "en_proceso", "pendiente", "resuelto", "cerrado"].map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </label>
       <label className="block">Prioridad

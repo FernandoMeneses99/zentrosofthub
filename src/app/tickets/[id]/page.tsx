@@ -24,7 +24,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
   const isClient = memberships?.[0]?.tenant_role === "client";
 
   const { data: ticket, error } = await supabase.from("tickets")
-    .select("id,titulo,descripcion,estado,prioridad,sla_vence,created_at,company_id,asignado_a,rating,encuesta")
+    .select("id,titulo,descripcion,estado,prioridad,categoria,sla_vence,created_at,company_id,asignado_a,rating,encuesta,primera_respuesta_at")
     .eq("id", id).eq("organization_id", orgId).single();
   if (error || !ticket)
     return <main className="space-y-4 p-8"><p>Ticket no encontrado o sin acceso.</p><Link href="/tickets">← Tickets</Link></main>;
@@ -46,6 +46,9 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
   const { data: links } = write
     ? await supabase.from("ticket_links").select("id,tipo,url,ref").eq("ticket_id", id).order("created_at")
     : { data: [] };
+  const { data: templates } = write
+    ? await supabase.from("response_templates").select("id,titulo,cuerpo").eq("organization_id", orgId).order("titulo")
+    : { data: [] };
   const empresa = companies?.find((c) => c.id === ticket.company_id)?.razon_social ?? "—";
 
   return (
@@ -55,6 +58,10 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs text-[#64748b]">Ticket · {ticket.created_at.slice(0, 10)} · {empresa}</p>
+            <p className="text-xs text-[#64748b]">
+              Primera respuesta: {ticket.primera_respuesta_at ? ticket.primera_respuesta_at.slice(0, 16).replace("T", " ") : "pendiente"}
+              {" · "}Categoría: {ticket.categoria ?? "—"}
+            </p>
             <h1 className="text-lg font-bold text-[#0a1628]">{ticket.titulo}</h1>
             {ticket.descripcion && <p className="mt-1 text-sm text-[#64748b]">{ticket.descripcion}</p>}
           </div>
@@ -72,7 +79,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#64748b]">Estado del servicio</h2>
             <TicketStage estado={ticket.estado} />
           </div>
-          <Discussion ticketId={id} orgId={orgId} userId={user.id} initial={discussion} canWrite={comment} />
+          <Discussion ticketId={id} orgId={orgId} userId={user.id} initial={discussion} canWrite={comment} templates={templates ?? []} />
           <Attachments docs={attachments ?? []} />
           {write && <GithubLinks ticketId={id} orgId={orgId} initial={links ?? []} />}
           {!isClient && (similares ?? []).length > 0 && (

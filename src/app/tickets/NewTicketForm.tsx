@@ -10,6 +10,7 @@ const schema = z.object({
   titulo: z.string().trim().min(3, "Mínimo 3 caracteres").max(200),
   descripcion: z.string().trim().max(2000).default(""),
   prioridad: z.enum(["baja", "media", "alta", "urgente"]),
+  categoria: z.enum(["soporte", "incidencia", "solicitud", "mantenimiento", "otro"]),
   company_id: z.string().default(""),
 });
 
@@ -20,7 +21,7 @@ export default function NewTicketForm({ orgId, companies, requireCompany, fixedC
   const [msg, setMsg] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const form = useForm({
-    defaultValues: { titulo: "", descripcion: "", prioridad: "media" as const, company_id: fixedCompanyId ?? "" },
+    defaultValues: { titulo: "", descripcion: "", prioridad: "media" as const, categoria: "soporte" as const, company_id: fixedCompanyId ?? "" },
     onSubmit: async ({ value }) => {
       const parsed = schema.safeParse(value);
       if (!parsed.success) { setMsg("Error: " + parsed.error.issues[0].message); return; }
@@ -32,7 +33,7 @@ export default function NewTicketForm({ orgId, companies, requireCompany, fixedC
       if (requireCompany && !fixedCompanyId) {
         const r = await fetch("/api/tickets/crear", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ titulo: value.titulo, descripcion: value.descripcion, prioridad: value.prioridad }),
+          body: JSON.stringify({ titulo: value.titulo, descripcion: value.descripcion, prioridad: value.prioridad, categoria: value.categoria }),
         });
         const j = await r.json();
         if (!r.ok) { setMsg("Error: " + j.error); return; }
@@ -56,7 +57,8 @@ export default function NewTicketForm({ orgId, companies, requireCompany, fixedC
       if (requireCompany && !companyId) { setMsg("Error: sin empresa asignada. Pide al owner que vincule tu contacto."); return; }
       const { data: ticket, error } = await supabase.from("tickets").insert({
         organization_id: orgId, titulo: value.titulo, descripcion: value.descripcion || null,
-        prioridad: value.prioridad, company_id: companyId || null, created_by: user?.id,
+        prioridad: value.prioridad, categoria: value.categoria,
+        company_id: companyId || null, created_by: user?.id,
       }).select("id").single();
       if (error) { setMsg("Error: " + error.message); return; }
       if (file && ticket) {
@@ -100,6 +102,17 @@ export default function NewTicketForm({ orgId, companies, requireCompany, fixedC
               onChange={(e) => field.handleChange(e.target.value as never)}
             >
               {["baja", "media", "alta", "urgente"].map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          )}
+        </form.Field>
+        <form.Field name="categoria">
+          {(field) => (
+            <select aria-label="Categoría"
+              className="rounded-[10px] border border-[#e6ebf2] px-3 py-2"
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value as never)}
+            >
+              {["soporte", "incidencia", "solicitud", "mantenimiento", "otro"].map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           )}
         </form.Field>

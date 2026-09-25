@@ -19,13 +19,14 @@ export async function POST(request: Request) {
   const role = memberships?.[0]?.tenant_role as string | undefined;
   if (!orgId) return NextResponse.json({ error: "Sin organización" }, { status: 403 });
 
-  const { titulo, descripcion, prioridad, company_id } = (await request.json()) as {
-    titulo?: string; descripcion?: string; prioridad?: string; company_id?: string;
+  const { titulo, descripcion, prioridad, categoria, company_id } = (await request.json()) as {
+    titulo?: string; descripcion?: string; prioridad?: string; categoria?: string; company_id?: string;
   };
   if (!titulo || titulo.trim().length < 3) return NextResponse.json({ error: "Título mínimo 3 caracteres" }, { status: 400 });
   if (!["baja", "media", "alta", "urgente"].includes(prioridad ?? "")) {
     return NextResponse.json({ error: "Prioridad inválida" }, { status: 400 });
   }
+  const cat = ["soporte", "incidencia", "solicitud", "mantenimiento", "otro"].includes(categoria ?? "") ? categoria! : "soporte";
 
   let company: string | null = company_id ?? null;
   if (role === "client") {
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
 
   const { data: ticket, error } = await supabase.from("tickets").insert({
     organization_id: orgId, titulo: titulo.trim(), descripcion: (descripcion ?? "").trim() || null,
-    prioridad, company_id: company, created_by: user.id,
+    prioridad, categoria: cat, company_id: company, created_by: user.id,
   }).select("id").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true, id: ticket.id, company_id: company });

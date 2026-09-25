@@ -7,10 +7,11 @@ import { PageHeader } from "@/components/ui/page-header";
 import { HoursBars, BillablePie } from "@/components/charts";
 import { InboxEmpty } from "@/components/illustrations";
 import NewTicketForm from "./NewTicketForm";
+import TemplatesManager from "./TemplatesManager";
 import Link from "next/link";
 
 const estadoTone: Record<string, "info" | "warn" | "ok" | "default"> = {
-  abierto: "info", en_proceso: "info", pendiente: "warn", cerrado: "ok",
+  abierto: "info", en_proceso: "info", pendiente: "warn", resuelto: "ok", cerrado: "ok",
 };
 const prioTone: Record<string, "warn" | "default" | "info"> = {
   urgente: "warn", alta: "warn", media: "info", baja: "default",
@@ -66,7 +67,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       </main>
     );
 
-  const estados = ["todos", "abierto", "en_proceso", "pendiente", "cerrado"];
+  const estados = ["todos", "abierto", "en_proceso", "pendiente", "resuelto", "cerrado"];
   const now = new Date();
   const byEstado = ["abierto", "en_proceso", "pendiente", "cerrado"].map((s) => ({
     name: s.replace("_", " "), value: (stats ?? []).filter((t) => t.estado === s).length,
@@ -149,6 +150,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
         )}
 
         {canCreate && <NewTicketForm orgId={orgId} companies={companies ?? []} requireCompany={role === "client"} fixedCompanyId={clientCompany} />}
+        {write && <TemplatesManager orgId={orgId} />}
         <Link href="/dashboard"><Button variant="ghost">← Dashboard</Button></Link>
       </div>
     </main>

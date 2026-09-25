@@ -5,6 +5,7 @@ export const SERVICE_STAGES = [
   { key: "abierto", label: "Recibido" },
   { key: "pendiente", label: "En diagnóstico" },
   { key: "en_proceso", label: "En reparación" },
+  { key: "resuelto", label: "Resuelto" },
   { key: "cerrado", label: "Entregado" },
 ] as const;
 
