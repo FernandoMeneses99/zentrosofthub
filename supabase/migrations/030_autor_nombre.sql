@@ -15,6 +15,9 @@ drop trigger if exists trg_comment_author on ticket_comments;
 create trigger trg_comment_author before insert on ticket_comments
 for each row execute function set_comment_author();
 
--- backfill existentes:
+-- backfill existentes (con el guard de escritura pausado: SQL Editor no tiene JWT
+-- y el trigger exigiría ticket.comment; se reactiva justo después):
+alter table ticket_comments disable trigger trg_w_tcomments;
 update ticket_comments c set autor_nombre = p.display_name
 from profiles p where p.id = c.autor and c.autor_nombre is null;
+alter table ticket_comments enable trigger trg_w_tcomments;
