@@ -21,7 +21,6 @@ const links = [
   { href: "/usuarios", label: "Usuarios", Icon: Users, roles: ["owner", "admin"] },
   { href: "/auditoria", label: "Auditoría", Icon: ShieldCheck, roles: ["owner", "admin"] },
   { href: "/notificaciones", label: "Avisos", Icon: Bell, roles: ["owner", "admin", "manager", "employee"] },
-  { href: "/portal", label: "Portal", Icon: House, roles: ["client"] },
   { href: "/kb", label: "Conocimiento", Icon: BookOpen, roles: ["owner", "admin", "manager", "employee"] },
   { href: "/ajustes", label: "Ajustes", Icon: Settings, roles: ["owner", "admin"] },
   { href: "/perfil", label: "Perfil", Icon: User, roles: null },
