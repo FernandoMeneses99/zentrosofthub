@@ -45,13 +45,15 @@ export default async function ServicioPage() {
               const n = countBy(s.key);
               const reached = total > 0 && (n > 0 || done > 0);
               return (
-                <li key={s.key} className="flex items-center gap-2 md:flex-1 md:flex-col md:gap-1 md:text-center">
-                  <span className={`grid size-8 place-content-center rounded-full ${reached ? "bg-[#4b82c3] text-white" : "bg-[#e6ebf2] text-[#64748b]"}`}>
-                    {reached ? <CircleCheck size={16} aria-hidden="true" /> : <span className="text-xs font-bold">{i + 1}</span>}
-                  </span>
-                  <p className={`text-sm font-medium ${reached ? "text-[#0a1628]" : "text-[#64748b]"}`}>
-                    {s.label} <span className="text-xs">({n})</span>
-                  </p>
+                <li key={s.key} className="flex-1">
+                  <Link href={`/tickets?estado=${s.key}`} className="flex items-center gap-2 rounded-lg p-1 hover:bg-white md:flex-col md:gap-1 md:text-center">
+                    <span className={`grid size-8 place-content-center rounded-full ${reached ? "bg-[#4b82c3] text-white" : "bg-[#e6ebf2] text-[#64748b]"}`}>
+                      {reached ? <CircleCheck size={16} aria-hidden="true" /> : <span className="text-xs font-bold">{i + 1}</span>}
+                    </span>
+                    <span className={`text-sm font-medium ${reached ? "text-[#0a1628]" : "text-[#64748b]"}`}>
+                      {s.label} <span className="text-xs">({n})</span>
+                    </span>
+                  </Link>
                   {i < STAGES.length - 1 && <span className="hidden h-px w-8 bg-[#e6ebf2] md:block" aria-hidden="true" />}
                 </li>
               );

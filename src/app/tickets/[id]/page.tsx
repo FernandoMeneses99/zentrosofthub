@@ -6,6 +6,7 @@ import Link from "next/link";
 import TicketStatusForm from "./TicketStatusForm";
 import TicketAiSuggest from "./TicketAiSuggest";
 import Discussion from "./Discussion";
+import { TicketStage } from "@/components/ui/service-stages";
 
 export default async function TicketDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -55,6 +56,10 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
 
       <div className="flex flex-1 gap-6 p-6">
         <div className="mx-auto w-full max-w-2xl flex-1 space-y-4">
+          <div className="rounded-[18px] border border-[#e6ebf2] bg-white p-5">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#64748b]">Estado del servicio</h2>
+            <TicketStage estado={ticket.estado} />
+          </div>
           <Discussion ticketId={id} orgId={orgId} userId={user.id} initial={discussion} canWrite={write} />
           {(similares ?? []).length > 0 && (
             <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-sm">

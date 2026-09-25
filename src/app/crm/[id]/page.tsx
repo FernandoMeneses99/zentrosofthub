@@ -2,6 +2,7 @@ import { createServerSupabase } from "@/lib/supabase-server";
 import { canWrite, canOperate } from "@/lib/access";
 import { Card, CardTitle, Badge } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { StageBadges, SERVICE_STAGES, stageOf } from "@/components/ui/service-stages";
 import EditCompanyForm from "./EditCompanyForm";
 import Link from "next/link";
 
@@ -64,10 +65,16 @@ export default async function CompanyDetail({ params }: { params: Promise<{ id: 
           </ul>
         </Card>
         <Card>
-          <CardTitle>Tickets recientes ({tickets?.length ?? 0})</CardTitle>
+          <CardTitle>Estado del servicio ({tickets?.length ?? 0})</CardTitle>
+          <div className="mt-2"><StageBadges tickets={(tickets ?? []).map((t) => ({ estado: t.estado }))} /></div>
           <ul className="mt-2 space-y-1 text-sm">
             {(tickets ?? []).map((t) => (
-              <li key={t.id}><Link href={`/tickets/${t.id}`}>{t.titulo}</Link> <Badge tone="info">{t.estado}</Badge></li>
+              <li key={t.id}>
+                <Link href={`/tickets/${t.id}`}>{t.titulo}</Link>{" "}
+                <Badge tone={t.estado === "cerrado" ? "ok" : "info"}>
+                  {SERVICE_STAGES[stageOf(t.estado)]?.label ?? t.estado}
+                </Badge>
+              </li>
             ))}
             {(tickets ?? []).length === 0 && <li className="text-[#64748b]">Sin tickets.</li>}
           </ul>
