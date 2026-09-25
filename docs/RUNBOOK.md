@@ -27,6 +27,13 @@ where email = 'EMAIL';
 - El login por contraseña no consume cuota de email (el enlace mágico sí;
   por eso fallaba con "límite de solicitudes").
 
+## Telegram (avisos)
+1. Habla con [@BotFather](https://t.me/BotFather) → `/newbot` → guarda el token.
+2. Crea un grupo con el bot y escribe algo; abre
+   `https://api.telegram.org/botTOKEN/getUpdates` para ver el `chat.id`.
+3. En `.env.local` y Vercel: `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID`.
+4. Botón en /notificaciones (owner/admin) o cron POST a `/api/avisos/telegram`.
+
 ## Respuesta a incidentes
 - Fuga sospechada: revocar sesión (Dashboard → Auth), revisar `audit_logs` + `security_events`.
 - Rotar keys: Supabase → Settings → API → Rotate; actualizar `.env.local` / Vercel env.

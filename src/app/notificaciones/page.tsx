@@ -1,6 +1,8 @@
 import { createServerSupabase } from "@/lib/supabase-server";
+import { isAdmin } from "@/lib/access";
 import { Card, CardTitle, Badge } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import TelegramButton from "./TelegramButton";
 import Link from "next/link";
 
 export default async function NotificacionesPage() {
@@ -51,7 +53,11 @@ export default async function NotificacionesPage() {
 
   return (
     <main className="space-y-6 p-8">
-      <PageHeader title="Avisos" subtitle="Pendientes accionables de tu organización" />
+      <PageHeader
+        title="Avisos"
+        subtitle="Pendientes accionables de tu organización"
+        action={isAdmin(memberships?.[0]?.tenant_role) ? <TelegramButton /> : undefined}
+      />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardTitle>SLA vencidos ({vencidos?.length ?? 0})</CardTitle>

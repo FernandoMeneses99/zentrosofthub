@@ -7,6 +7,7 @@ import TicketStatusForm from "./TicketStatusForm";
 import TicketAiSuggest from "./TicketAiSuggest";
 import Discussion from "./Discussion";
 import ClientResolve from "./ClientResolve";
+import GithubLinks from "./GithubLinks";
 import { TicketStage } from "@/components/ui/service-stages";
 
 export default async function TicketDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -39,6 +40,9 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
   const nameOf = (uid: string | null, stored?: string | null) =>
     stored || (uid === user.id ? "Tú" : profiles?.find((p) => p.id === uid)?.display_name ?? "Usuario");
   const discussion = (comments ?? []).map((c) => ({ ...c, autor_nombre: nameOf(c.autor, c.autor_nombre) }));
+  const { data: links } = write
+    ? await supabase.from("ticket_links").select("id,tipo,url,ref").eq("ticket_id", id).order("created_at")
+    : { data: [] };
   const empresa = companies?.find((c) => c.id === ticket.company_id)?.razon_social ?? "—";
 
   return (
@@ -66,6 +70,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
             <TicketStage estado={ticket.estado} />
           </div>
           <Discussion ticketId={id} orgId={orgId} userId={user.id} initial={discussion} canWrite={comment} />
+          {write && <GithubLinks ticketId={id} orgId={orgId} initial={links ?? []} />}
           {!isClient && (similares ?? []).length > 0 && (
             <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-sm">
               <p className="font-semibold text-amber-800">Posibles duplicados</p>
