@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const PROTECTED = ["/dashboard", "/crm", "/horas", "/auditoria", "/perfil", "/tickets", "/proyectos", "/usuarios", "/documentos", "/notificaciones", "/servicio", "/reportes", "/ajustes"];
+const PROTECTED = ["/dashboard", "/crm", "/horas", "/auditoria", "/perfil", "/tickets", "/proyectos", "/usuarios", "/documentos", "/notificaciones", "/servicio", "/reportes", "/ajustes", "/kb"];
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -34,4 +34,4 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ["/dashboard/:path*", "/crm/:path*", "/horas/:path*", "/auditoria/:path*", "/perfil/:path*", "/tickets/:path*", "/tickets", "/proyectos/:path*", "/usuarios/:path*", "/documentos/:path*", "/notificaciones/:path*", "/servicio/:path*", "/reportes/:path*", "/ajustes/:path*"] };
+export const config = { matcher: ["/dashboard/:path*", "/crm/:path*", "/horas/:path*", "/auditoria/:path*", "/perfil/:path*", "/tickets/:path*", "/tickets", "/proyectos/:path*", "/usuarios/:path*", "/documentos/:path*", "/notificaciones/:path*", "/servicio/:path*", "/reportes/:path*", "/ajustes/:path*", "/kb/:path*"] };

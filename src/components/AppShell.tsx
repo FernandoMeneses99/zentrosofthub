@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Building2, Clock, ShieldCheck, User, Inbox,
-  FolderKanban, Users, Files, Bell, LogOut, Wrench, ChartBar, Settings,
+  FolderKanban, Users, Files, Bell, LogOut, Wrench, ChartBar, Settings, BookOpen,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-client";
@@ -20,6 +20,7 @@ const links = [
   { href: "/usuarios", label: "Usuarios", Icon: Users, roles: ["owner", "admin"] },
   { href: "/auditoria", label: "Auditoría", Icon: ShieldCheck, roles: ["owner", "admin"] },
   { href: "/notificaciones", label: "Avisos", Icon: Bell, roles: ["owner", "admin", "manager", "employee"] },
+  { href: "/kb", label: "Conocimiento", Icon: BookOpen, roles: ["owner", "admin", "manager", "employee"] },
   { href: "/ajustes", label: "Ajustes", Icon: Settings, roles: ["owner", "admin"] },
   { href: "/perfil", label: "Perfil", Icon: User, roles: null },
 ];
