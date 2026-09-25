@@ -2,6 +2,7 @@ import { createServerSupabase } from "@/lib/supabase-server";
 import { canWrite, canOperate } from "@/lib/access";
 import NewCompanyForm from "./NewCompanyForm";
 import NewContactForm from "./NewContactForm";
+import ImportCsv from "./ImportCsv";
 import { CompaniesTable, ContactsTable } from "./tables";
 import { ExportCsv } from "@/components/ui/export-csv";
 import { PageHeader } from "@/components/ui/page-header";
@@ -43,6 +44,7 @@ export default async function CrmPage() {
         <ContactsTable rows={contacts ?? []} orgId={orgId} write={write} />
       </section>
       {write && <NewCompanyForm orgId={orgId} />}
+      {write && <ImportCsv orgId={orgId} />}
       {write && <NewContactForm orgId={orgId} companies={(companies ?? []).map((c) => ({ id: c.id, razon_social: c.razon_social }))} />}
     </main>
   );
