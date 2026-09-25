@@ -16,12 +16,15 @@ export default async function ReportesPage() {
     return <main className="space-y-4 p-8"><h1 className="text-2xl font-extrabold">Reportes</h1><p>Módulo no disponible para tu rol.</p></main>;
   }
 
-  const [{ data: hours }, { data: tickets }, { data: members }, { data: profiles }] = await Promise.all([
+  const [{ data: hours }, { data: tickets }, { data: members }, { data: profiles }, { data: rated }] = await Promise.all([
     supabase.from("time_entries").select("duration_min,billable,user_id,company_id").eq("organization_id", orgId).limit(1000),
     supabase.from("tickets").select("estado,prioridad,sla_vence").eq("organization_id", orgId).limit(1000),
     supabase.from("organization_members").select("user_id,tenant_role").eq("org_id", orgId).eq("status", "active"),
     supabase.from("profiles").select("id,display_name"),
+    supabase.from("tickets").select("rating").eq("organization_id", orgId).not("rating", "is", null),
   ]);
+  const ratings = (rated ?? []).map((r) => r.rating as number);
+  const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : "—";
   const nameOf = (uid: string) => profiles?.find((p) => p.id === uid)?.display_name ?? uid.slice(0, 8);
   const h2h = (min: number) => +(min / 60).toFixed(1);
 
@@ -39,7 +42,7 @@ export default async function ReportesPage() {
     <main className="space-y-6 p-8">
       <PageHeader
         title="Reportes"
-        subtitle={`Cumplimiento SLA ${cumplimiento}% · ${(hours ?? []).length} registros de horas`}
+        subtitle={`Cumplimiento SLA ${cumplimiento}% · Satisfacción ${avgRating}/5 (${ratings.length} calificaciones) · ${(hours ?? []).length} registros`}
         action={<ExportCsv rows={(hours ?? []) as Record<string, unknown>[]} filename="reporte-horas.csv" label="Exportar CSV" />}
       />
       <div className="grid gap-4 lg:grid-cols-2">

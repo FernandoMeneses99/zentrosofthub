@@ -29,6 +29,16 @@ export default function NewTicketForm({ orgId, companies, requireCompany, fixedC
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
+      // Aviso de posibles duplicados antes de guardar (no bloquea).
+      if (!requireCompany || fixedCompanyId) {
+        const { data: dups } = await supabase.rpc("similar_tickets", {
+          p_org: orgId, p_titulo: value.titulo, p_excluir: "00000000-0000-0000-0000-000000000000",
+        });
+        if (dups && dups.length > 0 && dups[0].sim > 0.5) {
+          if (!confirm(`Posible duplicado: "${dups[0].titulo}". ¿Crear de todos modos?`)) return;
+        }
+      }
+
       // Modo cliente sin vínculo previo: el servidor auto-vincula por email.
       if (requireCompany && !fixedCompanyId) {
         const r = await fetch("/api/tickets/crear", {
