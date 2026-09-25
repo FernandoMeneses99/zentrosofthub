@@ -16,6 +16,10 @@ export default async function Dashboard() {
   const orgId = orgs?.[0]?.id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
   const role = memberships?.[0]?.tenant_role ?? "viewer";
+  if (role === "client") {
+    const { redirect } = await import("next/navigation");
+    redirect("/portal");
+  }
   const nombre = profile?.display_name || (user.email ?? "técnico").split("@")[0];
   const isTech = !["owner", "admin", "manager"].includes(role);
 

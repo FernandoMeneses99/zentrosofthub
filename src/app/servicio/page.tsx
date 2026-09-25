@@ -23,17 +23,15 @@ export default async function ServicioPage() {
   const gestion = canOperate(memberships?.[0]?.tenant_role);
   const isClient = memberships?.[0]?.tenant_role === "client";
 
-  let q = supabase.from("tickets").select("id,titulo,estado,prioridad,sla_vence,company_id")
+  let q = supabase.from("tickets").select("id,titulo,estado,prioridad,sla_vence,company_id,created_by")
     .eq("organization_id", orgId).order("created_at", { ascending: false }).limit(100);
   if (!gestion && !isClient) q = q.eq("asignado_a", user.id);
+  if (isClient) q = q.eq("created_by", user.id);
   const { data: allTickets } = await q;
-  // Clientes: solo su(s) empresa(s) — el RLS ya lo garantiza; reforzamos en UI:
-  let tickets = allTickets;
-  if (isClient) {
-    const { data: mine } = await supabase.from("contacts").select("company_id").eq("user_id", user.id);
-    const ids = new Set((mine ?? []).map((c) => c.company_id));
-    tickets = (allTickets ?? []).filter((t) => t.company_id && ids.has(t.company_id));
-  }
+  // Clientes: solo sus tickets creados (el RLS 028 ya lo garantiza; reforzamos en UI).
+  const tickets = isClient
+    ? (allTickets ?? []).filter((t) => t.created_by === user.id)
+    : allTickets;
   const { data: companies } = await supabase.from("companies").select("id,razon_social").eq("organization_id", orgId);
   const nameById = new Map((companies ?? []).map((c) => [c.id, c.razon_social]));
 

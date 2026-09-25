@@ -15,6 +15,9 @@ export default async function HorasPage() {
   if (!orgId) return <main style={{ padding: 32 }}><p>Sin organización.</p></main>;
   const write = canWrite(memberships?.[0]?.tenant_role);
   const approve = canApprove(memberships?.[0]?.tenant_role);
+  if (memberships?.[0]?.tenant_role === "client") {
+    return <main className="space-y-4 p-8"><h1 className="text-2xl font-extrabold">Horas</h1><p>Módulo no disponible para tu rol. Mira tu servicio en <a href="/servicio">Servicio</a>.</p></main>;
+  }
   const [{ data: entries }, { data: companies }, { data: projects }, { data: tickets }] = await Promise.all([
     supabase.from("time_entries").select("id,fecha,descripcion,duration_min,billable,estado").eq("organization_id", orgId).order("fecha", { ascending: false }).limit(100),
     supabase.from("companies").select("id,razon_social").eq("organization_id", orgId).is("deleted_at", null),

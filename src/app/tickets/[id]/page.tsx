@@ -18,6 +18,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
   const write = canWrite(memberships?.[0]?.tenant_role);
   const comment = canComment(memberships?.[0]?.tenant_role);
+  const isClient = memberships?.[0]?.tenant_role === "client";
 
   const { data: ticket, error } = await supabase.from("tickets")
     .select("id,titulo,descripcion,estado,prioridad,sla_vence,created_at,company_id,asignado_a")
@@ -50,7 +51,6 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
           <div className="flex gap-2">
             <Badge tone="info">{ticket.estado}</Badge>
             <Badge tone={ticket.prioridad === "baja" ? "default" : "warn"}>{ticket.prioridad}</Badge>
-            <TicketAiSuggest ticketId={id} />
           </div>
         </div>
       </div>
@@ -62,7 +62,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
             <TicketStage estado={ticket.estado} />
           </div>
           <Discussion ticketId={id} orgId={orgId} userId={user.id} initial={discussion} canWrite={comment} />
-          {(similares ?? []).length > 0 && (
+          {!isClient && (similares ?? []).length > 0 && (
             <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-sm">
               <p className="font-semibold text-amber-800">Posibles duplicados</p>
               <ul className="mt-1 space-y-1">
@@ -75,7 +75,8 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
         </div>
 
         <aside className="hidden w-64 shrink-0 space-y-4 rounded-[18px] border border-[#e6ebf2] bg-white p-4 lg:block">
-          {write && <TicketStatusForm ticketId={id} estado={ticket.estado} prioridad={ticket.prioridad} asignado={ticket.asignado_a} members={(members ?? []).map((m) => ({ id: m.user_id, name: nameOf(m.user_id) }))} />}
+            {!isClient && <TicketAiSuggest ticketId={id} />}
+            {write && <TicketStatusForm ticketId={id} estado={ticket.estado} prioridad={ticket.prioridad} asignado={ticket.asignado_a} members={(members ?? []).map((m) => ({ id: m.user_id, name: nameOf(m.user_id) }))} />}
         </aside>
       </div>
     </main>
