@@ -24,6 +24,8 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
   const orgId = memberships?.[0]?.org_id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
   const write = canWrite(memberships?.[0]?.tenant_role);
+  const role = memberships?.[0]?.tenant_role as string | undefined;
+  const canCreate = write || role === "client";
 
   const filtro = (await searchParams).estado ?? "todos";
   let tickets: { id: string; titulo: string; estado: string; prioridad: string; created_at: string; sla_vence: string | null }[] | null = null;
@@ -141,7 +143,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
           </div>
         )}
 
-        {write && <NewTicketForm orgId={orgId} companies={companies ?? []} />}
+        {canCreate && <NewTicketForm orgId={orgId} companies={companies ?? []} requireCompany={role === "client"} />}
         <Link href="/dashboard"><Button variant="ghost">← Dashboard</Button></Link>
       </div>
     </main>

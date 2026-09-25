@@ -3,16 +3,17 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Building2, Clock, ShieldCheck, User, Inbox,
-  FolderKanban, Users, Files, Bell, LogOut, Wrench, ChartBar, Settings, BookOpen,
+  FolderKanban, Users, Files, Bell, LogOut, Wrench, ChartBar, Settings, BookOpen, House,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-client";
 
 const links = [
-  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard, roles: null },
+  { href: "/portal", label: "Portal", Icon: House, roles: ["client"] },
+  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard, roles: ["owner", "admin", "manager", "employee", "viewer"] },
   { href: "/crm", label: "CRM", Icon: Building2, roles: ["owner", "admin", "manager"] },
-  { href: "/horas", label: "Horas", Icon: Clock, roles: null },
-  { href: "/tickets", label: "Tickets", Icon: Inbox, roles: ["owner", "admin", "manager", "employee"] },
+  { href: "/horas", label: "Horas", Icon: Clock, roles: ["owner", "admin", "manager", "employee", "viewer"] },
+  { href: "/tickets", label: "Tickets", Icon: Inbox, roles: ["owner", "admin", "manager", "employee", "client"] },
   { href: "/servicio", label: "Servicio", Icon: Wrench, roles: null },
   { href: "/reportes", label: "Reportes", Icon: ChartBar, roles: ["owner", "admin", "manager"] },
   { href: "/proyectos", label: "Proyectos", Icon: FolderKanban, roles: ["owner", "admin", "manager"] },
@@ -20,6 +21,7 @@ const links = [
   { href: "/usuarios", label: "Usuarios", Icon: Users, roles: ["owner", "admin"] },
   { href: "/auditoria", label: "Auditoría", Icon: ShieldCheck, roles: ["owner", "admin"] },
   { href: "/notificaciones", label: "Avisos", Icon: Bell, roles: ["owner", "admin", "manager", "employee"] },
+  { href: "/portal", label: "Portal", Icon: House, roles: ["client"] },
   { href: "/kb", label: "Conocimiento", Icon: BookOpen, roles: ["owner", "admin", "manager", "employee"] },
   { href: "/ajustes", label: "Ajustes", Icon: Settings, roles: ["owner", "admin"] },
   { href: "/perfil", label: "Perfil", Icon: User, roles: null },

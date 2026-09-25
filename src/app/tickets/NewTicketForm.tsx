@@ -13,13 +13,16 @@ const schema = z.object({
   company_id: z.string().default(""),
 });
 
-export default function NewTicketForm({ orgId, companies }: { orgId: string; companies: { id: string; razon_social: string }[] }) {
+export default function NewTicketForm({ orgId, companies, requireCompany }: {
+  orgId: string; companies: { id: string; razon_social: string }[]; requireCompany?: boolean;
+}) {
   const [msg, setMsg] = useState("");
   const form = useForm({
     defaultValues: { titulo: "", descripcion: "", prioridad: "media" as const, company_id: "" },
     onSubmit: async ({ value }) => {
       const parsed = schema.safeParse(value);
       if (!parsed.success) { setMsg("Error: " + parsed.error.issues[0].message); return; }
+      if (requireCompany && !value.company_id) { setMsg("Error: elige tu empresa."); return; }
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       const { error } = await supabase.from("tickets").insert({
