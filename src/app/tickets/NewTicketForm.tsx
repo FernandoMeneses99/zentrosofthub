@@ -24,11 +24,36 @@ export default function NewTicketForm({ orgId, companies, requireCompany, fixedC
     onSubmit: async ({ value }) => {
       const parsed = schema.safeParse(value);
       if (!parsed.success) { setMsg("Error: " + parsed.error.issues[0].message); return; }
-      const companyId = fixedCompanyId ?? value.company_id;
-      if (requireCompany && !companyId) { setMsg("Error: sin empresa asignada. Pide al owner que vincule tu contacto."); return; }
       if (file && file.size > 10 * 1024 * 1024) { setMsg("Error: adjunto máximo 10 MB."); return; }
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
+
+      // Modo cliente sin vínculo previo: el servidor auto-vincula por email.
+      if (requireCompany && !fixedCompanyId) {
+        const r = await fetch("/api/tickets/crear", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ titulo: value.titulo, descripcion: value.descripcion, prioridad: value.prioridad }),
+        });
+        const j = await r.json();
+        if (!r.ok) { setMsg("Error: " + j.error); return; }
+        if (file) {
+          const path = `org/${orgId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+          const { error: upErr } = await supabase.storage.from("documentos").upload(path, file);
+          if (upErr) { setMsg("Ticket creado, pero falló el adjunto: " + upErr.message); return; }
+          await supabase.from("documents").insert({
+            organization_id: orgId, company_id: j.company_id, ticket_id: j.id,
+            nombre: file.name, storage_path: path, mime: file.type || null,
+            size_bytes: file.size, categoria: "evidencia",
+          });
+        }
+        setMsg("Ticket creado. Recarga.");
+        setFile(null);
+        form.reset();
+        return;
+      }
+
+      const companyId = fixedCompanyId ?? value.company_id;
+      if (requireCompany && !companyId) { setMsg("Error: sin empresa asignada. Pide al owner que vincule tu contacto."); return; }
       const { data: ticket, error } = await supabase.from("tickets").insert({
         organization_id: orgId, titulo: value.titulo, descripcion: value.descripcion || null,
         prioridad: value.prioridad, company_id: companyId || null, created_by: user?.id,
