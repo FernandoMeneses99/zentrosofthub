@@ -19,7 +19,7 @@ export default function AjustesClient({ orgId, initial, telegram }: {
   const [chat, setChat] = useState(telegram.chat_id);
   const [tgMsg, setTgMsg] = useState("");
   return (
-    <main className="space-y-6 p-8">
+    <>
       <PageHeader title="Ajustes" subtitle="SLA por prioridad (horas). Vacío = valor por defecto." />
       <Card>
         <CardTitle>Tiempos de respuesta</CardTitle>
@@ -93,6 +93,6 @@ export default function AjustesClient({ orgId, initial, telegram }: {
         </div>
         {tgMsg && <p className="mt-2 text-sm">{tgMsg}</p>}
       </Card>
-    </main>
+    </>
   );
 }

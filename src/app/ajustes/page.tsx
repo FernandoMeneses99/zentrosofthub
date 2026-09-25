@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase-server";
 import { isAdmin } from "@/lib/access";
 import AjustesClient from "./AjustesClient";
+import ApiKeysManager from "./ApiKeysManager";
 
 export default async function AjustesPage() {
   const supabase = await createServerSupabase();
@@ -17,5 +18,10 @@ export default async function AjustesPage() {
   (pols ?? []).forEach((p) => { initial[p.prioridad] = p.horas; });
   const { data: integ } = await supabase.from("integraciones").select("config").eq("organization_id", orgId).eq("provider", "telegram").single();
   const cfg = (integ?.config ?? {}) as { bot_token?: string; chat_id?: string };
-  return <AjustesClient orgId={orgId} initial={initial} telegram={{ bot_token: cfg.bot_token ?? "", chat_id: cfg.chat_id ?? "" }} />;
+  return (
+    <main className="space-y-6 p-8">
+      <AjustesClient orgId={orgId} initial={initial} telegram={{ bot_token: cfg.bot_token ?? "", chat_id: cfg.chat_id ?? "" }} />
+      <ApiKeysManager orgId={orgId} />
+    </main>
+  );
 }
