@@ -9,7 +9,7 @@ import { EllipsisVertical, MessageSquareReply, Trash2 } from "lucide-react";
 
 export type Comment = {
   id: string; cuerpo: string; es_interna: boolean; created_at: string;
-  autor: string | null; autor_nombre: string;
+  autor: string | null; autor_nombre: string | null;
 };
 
 const schema = z.object({
@@ -20,7 +20,7 @@ const schema = z.object({
 function Avatar({ name }: { name: string }) {
   return (
     <span className="grid size-6 shrink-0 place-content-center rounded-full bg-gradient-to-br from-[#4b82c3] to-[#4fd290] text-[11px] font-bold text-white" aria-hidden="true">
-      {name.charAt(0).toUpperCase()}
+      {(name || "U").charAt(0).toUpperCase()}
     </span>
   );
 }
@@ -44,9 +44,9 @@ export default function Discussion({ ticketId, orgId, userId, initial, canWrite 
       const { data, error } = await supabase.from("ticket_comments").insert({
         organization_id: orgId, ticket_id: ticketId, autor: user?.id,
         cuerpo: value.cuerpo, es_interna: value.es_interna,
-      }).select("id,cuerpo,es_interna,created_at,autor").single();
+      }).select("id,cuerpo,es_interna,created_at,autor,autor_nombre").single();
       if (error) { setMsg("Error: " + error.message); return; }
-      setComments((cs) => [...cs, { ...data, autor_nombre: "Tú" }]);
+      setComments((cs) => [...cs, data]);
       setReplyTo(null);
       setMsg("");
       form.reset();
@@ -104,12 +104,14 @@ export default function Discussion({ ticketId, orgId, userId, initial, canWrite 
       )}
       {msg && <p className="mb-3 text-sm text-red-700">{msg}</p>}
 
-      {comments.map((c) => (
+      {comments.map((c) => {
+        const nombre = c.autor_nombre || "Usuario";
+        return (
         <article key={c.id} className={`mb-3 rounded-[18px] border bg-white p-5 text-sm ${c.es_interna ? "border-amber-200 bg-amber-50/50" : "border-[#e6ebf2]"}`}>
           <footer className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Avatar name={c.autor_nombre} />
-              <p className="font-semibold text-[#0a1628]">{c.autor_nombre}</p>
+              <Avatar name={nombre} />
+              <p className="font-semibold text-[#0a1628]">{nombre}</p>
               <p className="text-xs text-[#64748b]">
                 <time dateTime={c.created_at}>{c.created_at.slice(0, 16).replace("T", " ")}</time>
               </p>
@@ -130,8 +132,8 @@ export default function Discussion({ ticketId, orgId, userId, initial, canWrite 
                       <button
                         className="flex w-full items-center gap-2 px-4 py-2 text-left hover:bg-[#f8fafc]"
                         onClick={() => {
-                          form.setFieldValue("cuerpo", `@${c.autor_nombre} `);
-                          setReplyTo(c.autor_nombre);
+                          form.setFieldValue("cuerpo", `@${nombre} `);
+                          setReplyTo(nombre);
                           setOpenMenu(null);
                           document.getElementById("comment-body")?.focus();
                         }}
@@ -156,7 +158,8 @@ export default function Discussion({ ticketId, orgId, userId, initial, canWrite 
           </footer>
           <p className="whitespace-pre-wrap text-[#334155]">{c.cuerpo}</p>
         </article>
-      ))}
+        );
+      })}
       {comments.length === 0 && <p className="text-sm text-[#64748b]">Sin observaciones todavía. Sé el primero en escribir.</p>}
     </section>
   );

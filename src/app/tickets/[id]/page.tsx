@@ -29,16 +29,16 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
 
   const [{ data: comments }, { data: companies }, { data: members }, { data: similares }, { data: profiles }] = await Promise.all([
     (isClient
-      ? supabase.from("ticket_comments").select("id,cuerpo,es_interna,created_at,autor").eq("ticket_id", id).eq("es_interna", false).order("created_at")
-      : supabase.from("ticket_comments").select("id,cuerpo,es_interna,created_at,autor").eq("ticket_id", id).order("created_at")),
+      ? supabase.from("ticket_comments").select("id,cuerpo,es_interna,created_at,autor,autor_nombre").eq("ticket_id", id).eq("es_interna", false).order("created_at")
+      : supabase.from("ticket_comments").select("id,cuerpo,es_interna,created_at,autor,autor_nombre").eq("ticket_id", id).order("created_at")),
     supabase.from("companies").select("id,razon_social").eq("organization_id", orgId).is("deleted_at", null),
     supabase.from("organization_members").select("user_id").eq("org_id", orgId).eq("status", "active"),
     supabase.rpc("similar_tickets", { p_org: orgId, p_titulo: ticket.titulo, p_excluir: id }),
     supabase.from("profiles").select("id,display_name"),
   ]);
-  const nameOf = (uid: string | null) =>
-    uid === user.id ? "Tú" : profiles?.find((p) => p.id === uid)?.display_name ?? "Usuario";
-  const discussion = (comments ?? []).map((c) => ({ ...c, autor_nombre: nameOf(c.autor) }));
+  const nameOf = (uid: string | null, stored?: string | null) =>
+    stored || (uid === user.id ? "Tú" : profiles?.find((p) => p.id === uid)?.display_name ?? "Usuario");
+  const discussion = (comments ?? []).map((c) => ({ ...c, autor_nombre: nameOf(c.autor, c.autor_nombre) }));
   const empresa = companies?.find((c) => c.id === ticket.company_id)?.razon_social ?? "—";
 
   return (
