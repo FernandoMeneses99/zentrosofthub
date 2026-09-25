@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   };
   if (!email || !/.+@.+\..+/.test(email)) return NextResponse.json({ error: "Email inválido" }, { status: 400 });
   if (!password || password.length < 8) return NextResponse.json({ error: "Mínimo 8 caracteres" }, { status: 400 });
-  if (!["owner", "admin", "manager", "employee", "viewer"].includes(tenant_role ?? "")) {
+  if (!["owner", "admin", "manager", "employee", "viewer", "client"].includes(tenant_role ?? "")) {
     return NextResponse.json({ error: "Rol inválido" }, { status: 400 });
   }
 

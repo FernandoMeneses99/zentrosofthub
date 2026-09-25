@@ -8,7 +8,7 @@ import { useState } from "react";
 const schema = z.object({
   email: z.string().trim().email("Email inválido").max(200),
   password: z.string().min(8, "Mínimo 8 caracteres").max(72),
-  tenant_role: z.enum(["owner", "admin", "manager", "employee", "viewer"]),
+  tenant_role: z.enum(["owner", "admin", "manager", "employee", "viewer", "client"]),
 });
 
 export default function AddMemberForm() {
@@ -48,7 +48,7 @@ export default function AddMemberForm() {
           {(field) => (
             <select aria-label="Rol" className="rounded-[10px] border border-[#e6ebf2] px-3 py-2"
               value={field.state.value} onChange={(e) => field.handleChange(e.target.value as never)}>
-              {["owner", "admin", "manager", "employee", "viewer"].map((r) => <option key={r} value={r}>{r}</option>)}
+              {["owner", "admin", "manager", "employee", "viewer", "client"].map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           )}
         </form.Field>

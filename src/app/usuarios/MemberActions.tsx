@@ -3,7 +3,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase-client";
 import { Button } from "@/components/ui/button";
 
-const ROLES = ["owner", "admin", "manager", "employee", "viewer"] as const;
+const ROLES = ["owner", "admin", "manager", "employee", "viewer", "client"] as const;
 
 export default function MemberActions({ orgId, userId, role, status, isSelf }: {
   orgId: string; userId: string; role: string; status: string; isSelf: boolean;
