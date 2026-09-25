@@ -1,22 +1,23 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase-client";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 const NEXT: Record<string, string> = { pendiente: "en_proceso", en_proceso: "hecha", hecha: "pendiente" };
 
 export default function TaskToggle({ id, estado }: { id: string; estado: string }) {
   const [msg, setMsg] = useState("");
   return (
-    <span>
-      <button
-        aria-label="Avanzar estado de la tarea"
-        className="rounded-lg border border-[#e6ebf2] px-2 py-1 text-xs hover:border-[#bcd2ec]"
+    <span className="flex items-center gap-1">
+      <Button
+        variant="outline" aria-label="Avanzar estado de la tarea"
         onClick={async () => {
           const supabase = createClient();
           const { error } = await supabase.from("tasks").update({ estado: NEXT[estado] ?? "pendiente" }).eq("id", id);
           setMsg(error ? "Error: " + error.message : "Actualizada. Recarga.");
         }}
-      >Avanzar</button>
+      ><ArrowRight size={14} aria-hidden="true" /> Avanzar</Button>
       {msg && <small> {msg}</small>}
     </span>
   );
