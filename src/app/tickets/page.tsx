@@ -8,6 +8,7 @@ import { HoursBars, BillablePie } from "@/components/charts";
 import { InboxEmpty } from "@/components/illustrations";
 import NewTicketForm from "./NewTicketForm";
 import TemplatesManager from "./TemplatesManager";
+import SavedFilters from "./SavedFilters";
 import Link from "next/link";
 
 const estadoTone: Record<string, "info" | "warn" | "ok" | "default"> = {
@@ -17,7 +18,9 @@ const prioTone: Record<string, "warn" | "default" | "info"> = {
   urgente: "warn", alta: "warn", media: "info", baja: "default",
 };
 
-export default async function TicketsPage({ searchParams }: { searchParams: Promise<{ estado?: string }> }) {
+export default async function TicketsPage({ searchParams }: {
+  searchParams: Promise<{ estado?: string; q?: string; categoria?: string; prioridad?: string; page?: string }>
+}) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return <main className="p-8"><a href="/login">Inicia sesión</a></main>;
@@ -33,19 +36,32 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
     clientCompany = mine?.[0]?.company_id ?? null;
   }
 
-  const filtro = (await searchParams).estado ?? "todos";
-  let tickets: { id: string; titulo: string; estado: string; prioridad: string; created_at: string; sla_vence: string | null }[] | null = null;
+  const sp = await searchParams;
+  const filtro = sp.estado ?? "todos";
+  const qtext = (sp.q ?? "").trim();
+  const catf = sp.categoria ?? "todas";
+  const priof = sp.prioridad ?? "todas";
+  const pageNum = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
+  const PAGE = 20;
+  let tickets: { id: string; titulo: string; estado: string; prioridad: string; categoria: string | null; created_at: string; sla_vence: string | null }[] | null = null;
+  let totalCount: number | null = null;
   let stats: { estado: string; prioridad: string; sla_vence: string | null }[] | null = null;
   let ticketsMissing = false;
   try {
-    let q = supabase.from("tickets").select("id,titulo,estado,prioridad,created_at,sla_vence").eq("organization_id", orgId).order("created_at", { ascending: false }).limit(50);
+    let q = supabase.from("tickets")
+      .select("id,titulo,estado,prioridad,categoria,created_at,sla_vence", { count: "exact" })
+      .eq("organization_id", orgId).order("created_at", { ascending: false })
+      .range((pageNum - 1) * PAGE, pageNum * PAGE - 1);
     if (filtro !== "todos") q = q.eq("estado", filtro);
+    if (catf !== "todas") q = q.eq("categoria", catf);
+    if (priof !== "todas") q = q.eq("prioridad", priof);
+    if (qtext) q = q.or(`titulo.ilike.%${qtext}%,descripcion.ilike.%${qtext}%`);
     const res = await q;
     const resStats = await supabase.from("tickets").select("estado,prioridad,sla_vence").eq("organization_id", orgId).limit(500);
     if (res.error) {
       if (/does not exist|could not find/i.test(res.error.message)) ticketsMissing = true;
       else throw new Error(res.error.message);
-    } else tickets = res.data;
+    } else { tickets = res.data; totalCount = res.count; }
     stats = resStats.data;
   } catch (e) {
     return (
@@ -109,6 +125,25 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
           subtitle={`${abiertos.length} abiertos · ${vencidos} vencidos · cumplimiento SLA ${cumplimiento}%${filtro !== "todos" ? ` · filtro: ${filtro}` : ""}`}
         />
 
+        <form method="get" className="flex flex-wrap gap-2 rounded-[18px] border border-[#e6ebf2] bg-white p-3">
+          <input type="hidden" name="estado" value={filtro} />
+          <label className="sr-only" htmlFor="tq">Buscar tickets</label>
+          <input id="tq" name="q" defaultValue={qtext} placeholder="Buscar por título o descripción…"
+            className="min-w-52 flex-1 rounded-[10px] border border-[#e6ebf2] px-3 py-2 text-sm" />
+          <label className="sr-only" htmlFor="tcat">Categoría</label>
+          <select id="tcat" name="categoria" defaultValue={catf} className="rounded-[10px] border border-[#e6ebf2] px-3 py-2 text-sm">
+            {["todas", "soporte", "incidencia", "solicitud", "mantenimiento", "otro"].map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <label className="sr-only" htmlFor="tprio">Prioridad</label>
+          <select id="tprio" name="prioridad" defaultValue={priof} className="rounded-[10px] border border-[#e6ebf2] px-3 py-2 text-sm">
+            {["todas", "urgente", "alta", "media", "baja"].map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <button className="rounded-[10px] bg-[#4b82c3] px-4 py-2 text-sm font-semibold text-white hover:bg-[#3a6aa3]">Filtrar</button>
+          {(qtext || catf !== "todas" || priof !== "todas") && (
+            <Link href="/tickets" className="rounded-[10px] border border-[#e6ebf2] px-4 py-2 text-sm">Limpiar</Link>
+          )}
+        </form>
+
         <div className="grid gap-4 lg:grid-cols-3">
           <Card>
             <CardTitle>Por estado</CardTitle>
@@ -148,9 +183,31 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
             </table>
           </div>
         )}
+        {(() => {
+          const total = totalCount ?? 0;
+          const pages = Math.max(1, Math.ceil(total / PAGE));
+          if (pages <= 1) return null;
+          const href = (p: number) => {
+            const s = new URLSearchParams({ estado: filtro, page: String(p) });
+            if (qtext) s.set("q", qtext);
+            if (catf !== "todas") s.set("categoria", catf);
+            if (priof !== "todas") s.set("prioridad", priof);
+            return `/tickets?${s.toString()}`;
+          };
+          return (
+            <nav aria-label="Paginación" className="flex items-center justify-between text-sm">
+              <p className="text-[#64748b]">{total} tickets · página {pageNum} de {pages}</p>
+              <div className="flex gap-2">
+                {pageNum > 1 && <Link href={href(pageNum - 1)} className="rounded-lg border border-[#e6ebf2] bg-white px-3 py-1.5">← Anterior</Link>}
+                {pageNum < pages && <Link href={href(pageNum + 1)} className="rounded-lg border border-[#e6ebf2] bg-white px-3 py-1.5">Siguiente →</Link>}
+              </div>
+            </nav>
+          );
+        })()}
 
         {canCreate && <NewTicketForm orgId={orgId} companies={companies ?? []} requireCompany={role === "client"} fixedCompanyId={clientCompany} />}
         {write && <TemplatesManager orgId={orgId} />}
+        <SavedFilters orgId={orgId} />
         <Link href="/dashboard"><Button variant="ghost">← Dashboard</Button></Link>
       </div>
     </main>
