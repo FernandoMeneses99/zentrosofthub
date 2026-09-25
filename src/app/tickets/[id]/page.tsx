@@ -1,5 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase-server";
-import { canWrite } from "@/lib/access";
+import { canWrite, canComment } from "@/lib/access";
 import { Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -17,6 +17,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
   const orgId = memberships?.[0]?.org_id as string | undefined;
   if (!orgId) return <main className="p-8"><p>Sin organización.</p></main>;
   const write = canWrite(memberships?.[0]?.tenant_role);
+  const comment = canComment(memberships?.[0]?.tenant_role);
 
   const { data: ticket, error } = await supabase.from("tickets")
     .select("id,titulo,descripcion,estado,prioridad,sla_vence,created_at,company_id,asignado_a")
@@ -60,7 +61,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#64748b]">Estado del servicio</h2>
             <TicketStage estado={ticket.estado} />
           </div>
-          <Discussion ticketId={id} orgId={orgId} userId={user.id} initial={discussion} canWrite={write} />
+          <Discussion ticketId={id} orgId={orgId} userId={user.id} initial={discussion} canWrite={comment} />
           {(similares ?? []).length > 0 && (
             <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-sm">
               <p className="font-semibold text-amber-800">Posibles duplicados</p>

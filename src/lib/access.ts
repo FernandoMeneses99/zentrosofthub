@@ -19,6 +19,9 @@ export function isAdmin(role?: string | null): boolean {
 export function canApprove(role?: string | null): boolean {
   return !!role && ["owner", "admin", "manager"].includes(role);
 }
+export function canComment(role?: string | null): boolean {
+  return !!role && ["owner", "admin", "manager", "employee"].includes(role);
+}
 export function canOperate(role?: string | null): boolean {
   return !!role && OPS_ROLES.includes(role);
 }
