@@ -15,5 +15,7 @@ export default async function AjustesPage() {
   const { data: pols } = await supabase.from("sla_policies").select("prioridad,horas").eq("organization_id", orgId);
   const initial: Record<string, number> = {};
   (pols ?? []).forEach((p) => { initial[p.prioridad] = p.horas; });
-  return <AjustesClient orgId={orgId} initial={initial} />;
+  const { data: integ } = await supabase.from("integraciones").select("config").eq("organization_id", orgId).eq("provider", "telegram").single();
+  const cfg = (integ?.config ?? {}) as { bot_token?: string; chat_id?: string };
+  return <AjustesClient orgId={orgId} initial={initial} telegram={{ bot_token: cfg.bot_token ?? "", chat_id: cfg.chat_id ?? "" }} />;
 }

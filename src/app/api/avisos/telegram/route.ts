@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { isAdmin } from "@/lib/access";
-import { sendTelegram } from "@/lib/telegram";
+import { sendTelegramOrg } from "@/lib/telegram";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ export async function POST() {
     `Vencidos: ${vencidos?.length ?? 0} · Horas por aprobar: ${porAprobar ?? 0}`,
     ...(vencidos ?? []).slice(0, 5).map((t) => `• [${t.prioridad}] ${t.titulo}`),
   ];
-  const sent = await sendTelegram(lines.join("\n"));
+  const sent = await sendTelegramOrg(supabase, orgId, lines.join("\n"));
   if (!sent.ok) return NextResponse.json({ error: sent.error }, { status: 500 });
   return NextResponse.json({ ok: true, vencidos: vencidos?.length ?? 0, porAprobar });
 }

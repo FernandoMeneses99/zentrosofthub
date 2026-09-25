@@ -56,7 +56,7 @@ export default async function NotificacionesPage() {
       <PageHeader
         title="Avisos"
         subtitle="Pendientes accionables de tu organización"
-        action={isAdmin(memberships?.[0]?.tenant_role) ? <TelegramButton /> : undefined}
+        action={<span className="flex gap-2">{isAdmin(memberships?.[0]?.tenant_role) ? <TelegramButton /> : undefined}<Link href="/ajustes" className="text-sm text-slate-300 underline">Configurar Telegram</Link></span>}
       />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
