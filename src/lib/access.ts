@@ -1,6 +1,7 @@
 // Matriz UI de roles (refleja role_permissions de la DB).
 // La DB (triggers 007/021 + RLS) es la que realmente bloquea; esto solo oculta.
-export const WRITE_ROLES = ["owner", "admin", "manager", "employee"];
+// employee = solo lectura (022): ve dashboard/horas/tickets/avisos/perfil, no escribe.
+export const WRITE_ROLES = ["owner", "admin", "manager"];
 export const AUDIT_ROLES = ["owner", "admin"];
 export const ADMIN_ROLES = ["owner", "admin"];
 // Módulos operativos (CRM/proyectos/documentos): solo gestión, no técnicos.
