@@ -34,13 +34,13 @@ export default async function TicketsPage({ searchParams }: {
   const priof = sp.prioridad ?? "todas";
   const pageNum = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
   const PAGE = 20;
-  let tickets: { id: string; titulo: string; estado: string; prioridad: string; categoria: string | null; created_at: string; sla_vence: string | null }[] | null = null;
+  let tickets: { id: string; titulo: string; estado: string; prioridad: string; categoria: string | null; created_at: string; sla_vence: string | null; primera_respuesta_at: string | null; asignado_a: string | null }[] | null = null;
   let totalCount: number | null = null;
   let stats: { estado: string; prioridad: string; sla_vence: string | null }[] | null = null;
   let ticketsMissing = false;
   try {
     let q = supabase.from("tickets")
-      .select("id,titulo,estado,prioridad,categoria,created_at,sla_vence", { count: "exact" })
+      .select("id,titulo,estado,prioridad,categoria,created_at,sla_vence,primera_respuesta_at,asignado_a", { count: "exact" })
       .eq("organization_id", orgId).order("created_at", { ascending: false })
       .range((pageNum - 1) * PAGE, pageNum * PAGE - 1);
     if (filtro !== "todos") q = q.eq("estado", filtro);
@@ -65,6 +65,9 @@ export default async function TicketsPage({ searchParams }: {
   const [{ data: companies }] = await Promise.all([
     supabase.from("companies").select("id,razon_social").eq("organization_id", orgId).is("deleted_at", null),
   ]);
+  const { data: profiles } = await supabase.from("profiles").select("id,display_name");
+  const nameOf = (uid: string | null) => profiles?.find((p) => p.id === uid)?.display_name ?? "—";
+  const tableRows = (tickets ?? []).map((t) => ({ ...t, asignado: nameOf(t.asignado_a) }));
 
   if (ticketsMissing)
     return (
@@ -85,6 +88,7 @@ export default async function TicketsPage({ searchParams }: {
   const abiertos = (stats ?? []).filter((t) => t.estado !== "cerrado");
   const vencidos = abiertos.filter((t) => t.sla_vence && new Date(t.sla_vence) < now).length;
   const cumplimiento = abiertos.length > 0 ? Math.round(((abiertos.length - vencidos) / abiertos.length) * 100) : 100;
+  const sinRespuesta = (tickets ?? []).filter((t) => !t.primera_respuesta_at && t.estado !== "cerrado").length;
 
   return (
     <main className="flex min-h-[calc(100vh-57px)]">
@@ -113,8 +117,22 @@ export default async function TicketsPage({ searchParams }: {
       <div className="flex-1 space-y-4 p-6">
         <PageHeader
           title="Tickets"
-          subtitle={`${abiertos.length} abiertos · ${vencidos} vencidos · cumplimiento SLA ${cumplimiento}%${filtro !== "todos" ? ` · filtro: ${filtro}` : ""}`}
+          subtitle={`Cumplimiento SLA ${cumplimiento}%`}
         />
+
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[
+            { label: "Abiertos", value: abiertos.length, tone: "info" as const },
+            { label: "Vencidos", value: vencidos, tone: "warn" as const },
+            { label: "Sin primera respuesta", value: sinRespuesta, tone: "warn" as const },
+            { label: "Cumplimiento", value: `${cumplimiento}%`, tone: "ok" as const },
+          ].map((k) => (
+            <div key={k.label} className="rounded-[18px] border border-[#e6ebf2] bg-white px-4 py-3">
+              <p className="text-2xl font-extrabold text-[#0a1628]">{k.value}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#64748b]">{k.label}</p>
+            </div>
+          ))}
+        </div>
 
         <form method="get" className="flex flex-wrap gap-2 rounded-[18px] border border-[#e6ebf2] bg-white p-3">
           <input type="hidden" name="estado" value={filtro} />
@@ -151,7 +169,7 @@ export default async function TicketsPage({ searchParams }: {
             <p className="text-sm text-[#64748b]">Sin tickets con estos filtros. Crea el primero abajo.</p>
           </div>
         ) : (
-          <TicketsTable rows={tickets} canBulk={write} />
+          <TicketsTable rows={tableRows} canBulk={write} />
         )}
         {(() => {
           const total = totalCount ?? 0;
