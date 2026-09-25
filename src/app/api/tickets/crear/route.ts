@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase-server";
+import { rateLimited } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,9 @@ export async function POST(request: Request) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Sin sesión" }, { status: 401 });
+  if (rateLimited(`ticket-crear:${user.id}`, 20)) {
+    return NextResponse.json({ error: "Límite excedido: 20/min" }, { status: 429 });
+  }
   const { data: memberships } = await supabase.from("organization_members").select("org_id,tenant_role").eq("user_id", user.id);
   const orgId = memberships?.[0]?.org_id as string | undefined;
   const role = memberships?.[0]?.tenant_role as string | undefined;

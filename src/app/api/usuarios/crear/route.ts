@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimited } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,9 @@ export async function POST(request: Request) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Sin sesión" }, { status: 401 });
+  if (rateLimited(`usuario-crear:${user.id}`, 10)) {
+    return NextResponse.json({ error: "Límite excedido: 10/min" }, { status: 429 });
+  }
 
   const { data: mine } = await supabase.from("organization_members").select("org_id,tenant_role").eq("user_id", user.id);
   const orgId = mine?.[0]?.org_id as string | undefined;
