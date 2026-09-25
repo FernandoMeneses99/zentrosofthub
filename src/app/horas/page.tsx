@@ -3,6 +3,7 @@ import { canWrite, canApprove } from "@/lib/access";
 import NewTimeEntryForm from "./NewTimeEntryForm";
 import { HoursTable } from "./tables";
 import Timer from "./Timer";
+import CloseMonth from "./CloseMonth";
 import { ExportCsv } from "@/components/ui/export-csv";
 import { PageHeader } from "@/components/ui/page-header";
 
@@ -18,11 +19,12 @@ export default async function HorasPage() {
   if (memberships?.[0]?.tenant_role === "client") {
     return <main className="space-y-4 p-8"><h1 className="text-2xl font-extrabold">Horas</h1><p>Módulo no disponible para tu rol. Mira tu servicio en <a href="/servicio">Servicio</a>.</p></main>;
   }
-  const [{ data: entries }, { data: companies }, { data: projects }, { data: tickets }] = await Promise.all([
+  const [{ data: entries }, { data: companies }, { data: projects }, { data: tickets }, { data: locked }] = await Promise.all([
     supabase.from("time_entries").select("id,fecha,descripcion,duration_min,billable,estado").eq("organization_id", orgId).order("fecha", { ascending: false }).limit(100),
     supabase.from("companies").select("id,razon_social").eq("organization_id", orgId).is("deleted_at", null),
     supabase.from("projects").select("id,nombre").eq("organization_id", orgId),
     supabase.from("tickets").select("id,titulo").eq("organization_id", orgId).in("estado", ["abierto", "en_proceso", "pendiente"]).order("created_at", { ascending: false }).limit(50),
+    supabase.from("locked_months").select("mes").eq("organization_id", orgId).order("mes", { ascending: false }).limit(12),
   ]);
   const totalMin = entries?.reduce((a, e) => a + (e.duration_min ?? 0), 0) ?? 0;
   const factMin = entries?.filter((e) => e.billable).reduce((a, e) => a + (e.duration_min ?? 0), 0) ?? 0;
@@ -37,6 +39,7 @@ export default async function HorasPage() {
       {write && <Timer orgId={orgId} />}
       <HoursTable rows={entries ?? []} write={write} approve={approve} />
       {write && <NewTimeEntryForm orgId={orgId} companies={companies ?? []} projects={projects ?? []} tickets={tickets ?? []} />}
+      {approve && <CloseMonth orgId={orgId} locked={(locked ?? []).map((l) => l.mes)} />}
     </main>
   );
 }
