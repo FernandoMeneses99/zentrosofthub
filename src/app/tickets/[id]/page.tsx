@@ -23,12 +23,14 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
   if (error || !ticket)
     return <main className="space-y-4 p-8"><p>Ticket no encontrado o sin acceso.</p><Link href="/tickets">← Tickets</Link></main>;
 
-  const [{ data: comments }, { data: companies }, { data: members }, { data: similares }] = await Promise.all([
+  const [{ data: comments }, { data: companies }, { data: members }, { data: similares }, { data: profiles }] = await Promise.all([
     supabase.from("ticket_comments").select("id,cuerpo,es_interna,created_at,autor").eq("ticket_id", id).order("created_at"),
     supabase.from("companies").select("id,razon_social").eq("organization_id", orgId).is("deleted_at", null),
     supabase.from("organization_members").select("user_id").eq("org_id", orgId).eq("status", "active"),
     supabase.rpc("similar_tickets", { p_org: orgId, p_titulo: ticket.titulo, p_excluir: id }),
+    supabase.from("profiles").select("id,display_name"),
   ]);
+  const nameOf = (uid: string) => profiles?.find((p) => p.id === uid)?.display_name ?? uid.slice(0, 8);
   const empresa = companies?.find((c) => c.id === ticket.company_id)?.razon_social ?? "—";
 
   return (
@@ -76,7 +78,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
         </div>
 
         <aside className="hidden w-64 shrink-0 space-y-4 rounded-[18px] border border-[#e6ebf2] bg-white p-4 lg:block">
-          {write && <TicketStatusForm ticketId={id} estado={ticket.estado} prioridad={ticket.prioridad} asignado={ticket.asignado_a} members={(members ?? []).map((m) => m.user_id)} />}
+          {write && <TicketStatusForm ticketId={id} estado={ticket.estado} prioridad={ticket.prioridad} asignado={ticket.asignado_a} members={(members ?? []).map((m) => ({ id: m.user_id, name: nameOf(m.user_id) }))} />}
         </aside>
       </div>
     </main>

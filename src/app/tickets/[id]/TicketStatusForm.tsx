@@ -3,7 +3,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase-client";
 
 export default function TicketStatusForm({ ticketId, estado, prioridad, asignado, members }: {
-  ticketId: string; estado: string; prioridad: string; asignado: string | null; members: string[];
+  ticketId: string; estado: string; prioridad: string; asignado: string | null; members: { id: string; name: string }[];
 }) {
   const [msg, setMsg] = useState("");
   const update = async (patch: Record<string, string | null>) => {
@@ -31,7 +31,7 @@ export default function TicketStatusForm({ ticketId, estado, prioridad, asignado
         <select className="mt-1 w-full rounded-lg border border-[#e6ebf2] px-2 py-1.5" value={asignado ?? ""}
           onChange={(e) => update({ asignado_a: e.target.value || null })}>
           <option value="">Sin asignar</option>
-          {members.map((m) => <option key={m} value={m}>{m.slice(0, 8)}</option>)}
+          {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
       </label>
       {msg && <p className="text-xs">{msg}</p>}

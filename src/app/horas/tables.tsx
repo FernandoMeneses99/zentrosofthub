@@ -19,12 +19,12 @@ const baseCols: ColumnDef<Entry>[] = [
   ) },
 ];
 
-export function HoursTable({ rows, write }: { rows: Entry[]; write: boolean }) {
+export function HoursTable({ rows, write, approve }: { rows: Entry[]; write: boolean; approve: boolean }) {
   const cols: ColumnDef<Entry>[] = write ? [
     ...baseCols,
     { id: "acciones", header: "Acciones", cell: ({ row }) => (
       <span className="flex gap-2">
-        <ApproveButton id={row.original.id} estado={row.original.estado} />
+        {approve && <ApproveButton id={row.original.id} estado={row.original.estado} />}
         <TimeEntryActions id={row.original.id} descripcion={row.original.descripcion} />
       </span>
     ) },
