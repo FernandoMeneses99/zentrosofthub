@@ -3,9 +3,9 @@ import { canWrite } from "@/lib/access";
 import { Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import TicketComposer from "./TicketComposer";
 import TicketStatusForm from "./TicketStatusForm";
 import TicketAiSuggest from "./TicketAiSuggest";
+import Discussion from "./Discussion";
 
 export default async function TicketDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,7 +30,9 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
     supabase.rpc("similar_tickets", { p_org: orgId, p_titulo: ticket.titulo, p_excluir: id }),
     supabase.from("profiles").select("id,display_name"),
   ]);
-  const nameOf = (uid: string) => profiles?.find((p) => p.id === uid)?.display_name ?? uid.slice(0, 8);
+  const nameOf = (uid: string | null) =>
+    uid === user.id ? "Tú" : profiles?.find((p) => p.id === uid)?.display_name ?? "Usuario";
+  const discussion = (comments ?? []).map((c) => ({ ...c, autor_nombre: nameOf(c.autor) }));
   const empresa = companies?.find((c) => c.id === ticket.company_id)?.razon_social ?? "—";
 
   return (
@@ -52,19 +54,8 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
       </div>
 
       <div className="flex flex-1 gap-6 p-6">
-        <div className="flex-1 space-y-4">
-          <ol className="relative space-y-5 border-l-2 border-[#e6ebf2] pl-5">
-            {(comments ?? []).map((c) => (
-              <li key={c.id} className={`rounded-[12px] border p-4 ${c.es_interna ? "border-amber-200 bg-amber-50" : "border-[#e6ebf2] bg-white"}`}>
-                <p className="text-xs text-[#64748b]">
-                  {c.created_at.slice(0, 16).replace("T", " ")} · {c.es_interna ? "Nota interna" : "Respuesta"}
-                </p>
-                <p className="mt-1 text-sm">{c.cuerpo}</p>
-              </li>
-            ))}
-            {(comments ?? []).length === 0 && <p className="text-sm text-[#64748b]">Sin mensajes todavía.</p>}
-          </ol>
-          {write && <TicketComposer ticketId={id} orgId={orgId} />}
+        <div className="mx-auto w-full max-w-2xl flex-1 space-y-4">
+          <Discussion ticketId={id} orgId={orgId} userId={user.id} initial={discussion} canWrite={write} />
           {(similares ?? []).length > 0 && (
             <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-sm">
               <p className="font-semibold text-amber-800">Posibles duplicados</p>
